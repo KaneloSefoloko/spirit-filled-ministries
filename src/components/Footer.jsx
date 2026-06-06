@@ -83,15 +83,7 @@ export default function Footer() {
 
                     {/* BUILT BY */}
                     <p className="text-center text-[11px] tracking-[0.35em] text-gray-500">
-                        Built with care by{" "}
-                        <a
-                            href="https://kavanti.co.za"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-purple-600 hover:underline"
-                        >
-                            Kamoso Group
-                        </a>
+                        Built with care by Kamoso Group.
                     </p>
                 </div>
             </div>

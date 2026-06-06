@@ -239,7 +239,7 @@ export default function Home() {
     }
 
     return (
-        <div>
+        <div className="overflow-x-hidden px-4 sm:px-6 md:px-10">
 
             {/* ================= HERO ================= */}
             <div className="relative h-[85vh] overflow-hidden mb-12 md:mb-16 rounded-b-[2rem]">
@@ -356,8 +356,8 @@ export default function Home() {
 
             {/* ================= MESSAGE (NEW STYLE ONLY) ================= */}
             {dailyMessage && (
-                <div className="mb-12 flex justify-center">
-                    <div className="w-full max-w-4xl rounded-2xl px-4 md:px-6 py-6 md:py-8 text-center bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg">
+                <div className="mb-12">
+                    <div className="w-full max-w-4xl mx-auto rounded-2xl px-4 sm:px-6 py-6 md:py-8 text-center bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg">
                         <p className="text-xs uppercase tracking-[0.35em] text-purple-600 mb-3">
                             Message of the Day
                         </p>
@@ -375,8 +375,8 @@ export default function Home() {
                 </h2>
             </div>
 
-            <div className="flex justify-center">
-                <div className="w-full max-w-4xl md:max-w-5xl rounded-2xl bg-white/80 backdrop-blur-md border border-white/30 shadow-lg p-4 md:p-8">
+            <div>
+                <div className="w-full max-w-4xl md:max-w-5xl mx-auto px-2 sm:px-4 p-4 md:p-8 rounded-2xl bg-white/80 backdrop-blur-md border border-white/30 shadow-lg">
                     {topTwoEvents.length === 0 ? (
                         <p className="uppercase tracking-[0.35em] text-red-700 text-sm text-center">
                             No events yet

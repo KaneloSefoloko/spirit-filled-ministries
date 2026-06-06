@@ -18,10 +18,24 @@ export default function Navbar() {
     useEffect(() => {
         async function load() {
             const { data } = await supabase.from("branches").select("*");
-            setBranches(data || []);
+
+            const allBranches = data || [];
+            setBranches(allBranches);
+
+            // ✅ Set default branch (Strand)
+            if (!branch && allBranches.length > 0) {
+                const strandBranch = allBranches.find(
+                    (b) => b.name.toLowerCase().includes("strand")
+                );
+
+                if (strandBranch) {
+                    setBranch(strandBranch.id);
+                }
+            }
         }
+
         load();
-    }, []);
+    }, [branch, setBranch]);
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 10);
