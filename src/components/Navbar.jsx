@@ -72,12 +72,23 @@ export default function Navbar() {
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-20 md:h-32">
 
                 {/* LOGO */}
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0">
                     <img
                         src={logo}
                         alt="logo"
                         className="h-14 w-14 md:h-[100px] md:w-[100px] object-contain rounded-full"
                     />
+                </div>
+
+                {/* Mobile only title */}
+                <div className="md:hidden flex flex-col min-w-0">
+                    <h1 className="text-xs font-semibold uppercase tracking-[0.1em] whitespace-nowrap">
+                        Spirit Filled Ministries
+                    </h1>
+
+                    <h2 className="text-[8px] uppercase tracking-[0.05em] whitespace-nowrap opacity-90">
+                        Practical Deliverance & Healing
+                    </h2>
                 </div>
 
                 {/* DESKTOP NAV */}

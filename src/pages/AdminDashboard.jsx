@@ -52,6 +52,22 @@ export default function AdminDashboard() {
     const [rsvpStats, setRsvpStats] = useState({});
 
     /* ========================
+   GALLERY
+======================== */
+    const [gallery, setGallery] = useState([]);
+    const [galleryImage, setGalleryImage] = useState(null);
+    const [galleryUploading, setGalleryUploading] = useState(false);
+
+    const loadGallery = async () => {
+        const { data } = await supabase
+            .from("gallery")
+            .select("*")
+            .eq("branch_id", selectedBranch);
+
+        setGallery(data || []);
+    };
+
+    /* ========================
        INITIAL LOAD
     ======================== */
     useEffect(() => {
@@ -80,6 +96,8 @@ export default function AdminDashboard() {
         if (!selectedBranch) return;
 
         loadActivities(selectedBranch);
+
+        loadGallery();
 
         // ✅ Load branch live URL
         async function loadBranchLive() {
@@ -203,6 +221,32 @@ export default function AdminDashboard() {
         return data.publicUrl;
     };
 
+    const uploadGalleryImage = async () => {
+        if (!galleryImage) return null;
+
+        setGalleryUploading(true);
+
+        const fileName = `${Date.now()}-${galleryImage.name}`;
+
+        const { error } = await supabase.storage
+            .from("gallery")
+            .upload(fileName, galleryImage);
+
+        if (error) {
+            alert(error.message);
+            setGalleryUploading(false);
+            return null;
+        }
+
+        const { data } = supabase.storage
+            .from("gallery")
+            .getPublicUrl(fileName);
+
+        setGalleryUploading(false);
+
+        return data.publicUrl;
+    };
+
     /* ========================
        ACTIVITIES CRUD
     ======================== */
@@ -306,7 +350,10 @@ export default function AdminDashboard() {
 
         await supabase
             .from("branches")
-            .update({ live_url: branchLiveUrl })
+            .update({
+                live_url: branchLiveUrl,
+                stream_status: "live",
+            })
             .eq("id", selectedBranch);
 
         alert("✅ Branch is now LIVE");
@@ -315,7 +362,10 @@ export default function AdminDashboard() {
     const stopLive = async () => {
         await supabase
             .from("branches")
-            .update({ live_url: null })
+            .update({
+                live_url: null,
+                stream_status: "replay",
+            })
             .eq("id", selectedBranch);
 
         setBranchLiveUrl("");
@@ -324,8 +374,43 @@ export default function AdminDashboard() {
     };
 
     /* ========================
-       UI
+       Gallery Crud
     ======================== */
+    const addGalleryImage = async () => {
+        if (!galleryImage) {
+            alert("Please select an image");
+            return;
+        }
+
+        const imageUrl = await uploadGalleryImage();
+
+        if (!imageUrl) return;
+
+        await supabase.from("gallery").insert({
+            branch_id: selectedBranch,
+            image_url: imageUrl,
+        });
+
+        setGalleryImage(null);
+
+        loadGallery();
+    };
+
+    const deleteGalleryImage = async (id) => {
+        const confirmDelete = window.confirm(
+            "Delete this gallery image?"
+        );
+
+        if (!confirmDelete) return;
+
+        await supabase
+            .from("gallery")
+            .delete()
+            .eq("id", id);
+
+        loadGallery();
+    };
+
     return (
         <div className="p-6 sm:p-10 max-w-7xl mx-auto space-y-16">
 
@@ -512,6 +597,64 @@ export default function AdminDashboard() {
                         End Live
                     </button>
                 </div>
+            </section>
+
+            {/* ========================
+                     GALLERY
+                ======================== */}
+            <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+
+                <h2 className="text-2xl font-bold mb-6">
+                    Gallery
+                </h2>
+
+                <div className="space-y-4">
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                            setGalleryImage(e.target.files?.[0] || null)
+                        }
+                    />
+
+                    <button
+                        onClick={addGalleryImage}
+                        disabled={galleryUploading}
+                        className="bg-purple-600 text-white px-6 py-3 rounded-2xl"
+                    >
+                        {galleryUploading
+                            ? "Uploading..."
+                            : "Upload Photo"}
+                    </button>
+
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+
+                    {gallery.map((img) => (
+                        <div
+                            key={img.id}
+                            className="relative"
+                        >
+                            <img
+                                src={img.image_url}
+                                alt=""
+                                className="w-full h-40 object-cover rounded-xl"
+                            />
+
+                            <button
+                                onClick={() =>
+                                    deleteGalleryImage(img.id)
+                                }
+                                className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
             </section>
 
             {/* ========================

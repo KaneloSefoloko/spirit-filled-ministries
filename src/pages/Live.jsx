@@ -11,6 +11,27 @@ export default function Live() {
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
     const bottomRef = useRef();
+    const [chatName, setChatName] = useState(() => localStorage.getItem("chat_name") || "");
+    const [showNameModal, setShowNameModal] = useState(() => !localStorage.getItem("chat_name"));
+
+    /* ========================
+       STREAM STATUS
+    ======================== */
+    const streamStatus = branchData?.stream_status || "offline";
+
+    const videoUrl =
+        streamStatus === "live"
+            ? branchData?.live_url
+            : streamStatus === "replay"
+                ? branchData?.replay_url
+                : null;
+
+    const embedUrl =
+        videoUrl
+            ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+                videoUrl
+            )}&show_text=false`
+            : null;
 
     /* ========================
        LOAD DATA
@@ -83,17 +104,12 @@ export default function Live() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    /* ========================
-       VIDEO LOGIC (LIVE + REPLAY)
-    ======================== */
-    const videoUrl =
-        branchData?.live_url || branchData?.replay_url;
+    const saveName = () => {
+        if (!chatName.trim()) return;
 
-    const embedUrl = videoUrl
-        ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
-            videoUrl
-        )}&show_text=false`
-        : null;
+        localStorage.setItem("chat_name", chatName.trim());
+        setShowNameModal(false);
+    };
 
     /* ========================
        SEND MESSAGE
@@ -103,43 +119,55 @@ export default function Live() {
 
         await supabase.from("live_chat_messages").insert({
             branch_id: branch,
-            user_name: "Guest",
+            user_name: chatName || "Guest",
             message: text,
         });
 
         setText("");
     };
 
+    /* ========================
+       LOADING STATE
+    ======================== */
+    if (streamStatus === "loading") {
+        return (
+            <div className="text-center py-20 text-gray-500">
+                Loading stream...
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
             {/* ================= HEADER ================= */}
-            <div className="text-center">
-                <h1 className="text-xl sm:text-2xl font-bold text-purple-700">
-                    Live Service - {branchData?.name}
-                </h1>
 
-                {/* LIVE */}
-                {branchData?.live_url && (
-                    <div className="mt-3 flex justify-center gap-3 items-center text-sm flex-wrap">
-            <span className="px-3 py-1 bg-red-600 text-white rounded-full animate-pulse">
-              🔴 LIVE
-            </span>
-                        <span className="text-gray-500">
-              Service is currently streaming
-            </span>
-                    </div>
-                )}
+            {streamStatus === "live" && (
+                <div className="mt-3 flex justify-center gap-3 items-center text-sm flex-wrap">
+                    <span className="px-3 py-1 bg-red-600 text-white rounded-full animate-pulse">
+                        🔴 LIVE
+                    </span>
+                    <span className="text-gray-500">
+                        Service is currently streaming
+                    </span>
+                </div>
+            )}
 
-                {/* REPLAY */}
-                {!branchData?.live_url && branchData?.replay_url && (
-                    <div className="mt-3">
-            <span className="px-3 py-1 bg-gray-800 text-white text-xs rounded-full">
-              🎥 Replay Available
-            </span>
-                    </div>
-                )}
-            </div>
+            {streamStatus === "replay" && (
+                <div className="mt-3 text-center">
+                    <span className="px-3 py-1 bg-gray-800 text-white text-xs rounded-full">
+                        🎥 Replay Available
+                    </span>
+                </div>
+            )}
+
+            {streamStatus === "offline" && (
+                <div className="mt-3 text-center">
+                    <span className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">
+                        ⚫ No live stream available right now
+                    </span>
+                </div>
+            )}
 
             {/* ================= LAYOUT ================= */}
             <div className="grid gap-6 lg:grid-cols-3">
@@ -147,33 +175,38 @@ export default function Live() {
                 {/* VIDEO */}
                 <div className="lg:col-span-2 bg-black rounded-2xl overflow-hidden shadow-lg">
 
-                    <div className="relative w-full aspect-video">
+                    {embedUrl ? (
+                        <div className="relative w-full aspect-video">
+                            <iframe
+                                src={embedUrl}
+                                className="absolute top-0 left-0 w-full h-full"
+                                style={{ border: "none" }}
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                allowFullScreen
+                            />
+                        </div>
+                    ) : (
+                        <div className="aspect-video flex items-center justify-center bg-black text-white text-sm">
+                            No stream available
+                        </div>
+                    )}
 
-                        <iframe
-                            src={embedUrl}
-                            className="absolute top-0 left-0 w-full h-full"
-                            style={{ border: "none" }}
-                            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                            allowFullScreen
-                            scrolling="no"
-                        />
+                    {videoUrl && (
+                        <div className="flex justify-between items-center p-3 bg-black text-white text-xs">
+                            <span className="text-gray-300">
+                                Watching service
+                            </span>
 
-                    </div>
-
-                    <div className="flex justify-between items-center p-3 bg-black text-white text-xs">
-            <span className="text-gray-300">
-              Watching service
-            </span>
-
-                        <a
-                            href={videoUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline"
-                        >
-                            Watch on Facebook →
-                        </a>
-                    </div>
+                            <a
+                                href={videoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                            >
+                                Watch on Facebook →
+                            </a>
+                        </div>
+                    )}
                 </div>
 
                 {/* ================= CHAT ================= */}
@@ -187,9 +220,9 @@ export default function Live() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
                         {messages.map((m) => (
                             <div key={m.id}>
-                <span className="font-semibold text-purple-600">
-                  {m.user_name}:
-                </span>{" "}
+                                <span className="font-semibold text-purple-600">
+                                    {m.user_name}:
+                                </span>{" "}
                                 {m.message}
                             </div>
                         ))}
@@ -203,7 +236,9 @@ export default function Live() {
                             onChange={(e) => setText(e.target.value)}
                             placeholder="Type message..."
                             className="flex-1 border p-2 rounded-lg text-sm"
-                            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                            onKeyDown={(e) =>
+                                e.key === "Enter" && sendMessage()
+                            }
                         />
 
                         <button
@@ -226,15 +261,51 @@ export default function Live() {
                     >
                         ✕
                     </button>
+
                     <iframe
                         src={embedUrl}
                         className="absolute top-0 left-0 w-full h-full"
                         style={{ border: "none" }}
                         allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                         allowFullScreen
-                        scrolling="no"
+                    />
+                </div>
+            )}
+
+            {showNameModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+
+                    {/* BACKDROP */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     />
 
+                    {/* MODAL */}
+                    <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 text-center">
+
+                        <h2 className="text-lg font-semibold mb-2">
+                            Welcome to Live Chat
+                        </h2>
+
+                        <p className="text-sm text-gray-500 mb-4">
+                            Please enter your name to join the service chat
+                        </p>
+
+                        <input
+                            value={chatName}
+                            onChange={(e) => setChatName(e.target.value)}
+                            placeholder="Your name (e.g. John / Sister Grace)"
+                            className="w-full border p-3 rounded-lg text-sm mb-4"
+                        />
+
+                        <button
+                            onClick={saveName}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700"
+                        >
+                            Join Chat
+                        </button>
+
+                    </div>
                 </div>
             )}
         </div>

@@ -34,6 +34,7 @@ const setCache = (key, data) => {
 };
 
 export default function Home() {
+
     const {branch} = useBranch();
     const navigate = useNavigate();
 
@@ -46,9 +47,13 @@ export default function Home() {
     const [now, setNow] = useState(Date.now());
     const [visibleItems, setVisibleItems] = useState(false);
     const [showNoLiveModal, setShowNoLiveModal] = useState(false);
-    const [viewers, setViewers] = useState(0);
 
-    /* FORMATTERS */
+    const streamStatus = branchData?.stream_status || "offline";
+    const hasStream = !!branchData?.live_url;
+
+    const isLive = streamStatus === "live" && hasStream;
+    const isReplay = streamStatus === "ended" && hasStream;
+
     const formatDate = (date) =>
         new Date(date).toLocaleDateString([], {
             weekday: "short",
@@ -83,26 +88,6 @@ export default function Home() {
         const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);
     }, []);
-
-    useEffect(() => {
-        if (!branchData?.live_url) return;
-
-        // Start viewers between 30–120
-        setViewers(Math.floor(Math.random() * 90) + 30);
-
-        const interval = setInterval(() => {
-            setViewers((prev) => {
-                const change = Math.floor(Math.random() * 6);
-
-                return Math.max(
-                    20,
-                    prev + (Math.random() > 0.5 ? change : -change)
-                );
-            });
-        }, 4000);
-
-        return () => clearInterval(interval);
-    }, [branchData?.live_url]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -223,11 +208,12 @@ export default function Home() {
     const topTwoEvents = upcomingActivities.slice(0, 2);
 
     const handleWatchLive = () => {
-        if (!branchData?.live_url) {
-            setShowNoLiveModal(true);
+        if (isLive || isReplay) {
+            navigate("/live");
             return;
         }
-        navigate("/live");
+
+        setShowNoLiveModal(true);
     };
 
     if (loading && !branchData) {
@@ -239,6 +225,7 @@ export default function Home() {
     }
 
     return (
+
         <div className="overflow-x-hidden">
 
             {/* ================= HERO ================= */}
@@ -253,10 +240,10 @@ export default function Home() {
                         }`}
                     >
                         <div
-                            className="absolute inset-0 bg-cover bg-center scale-105"
+                            className="absolute inset-0 bg-cover bg-center scale-105 brightness-110"
                             style={{backgroundImage: `url(${slide.image})`}}
                         />
-                        <div className="absolute inset-0 bg-black/60"/>
+                        <div className="absolute inset-0 bg-black/35"/>
 
                         {/* CONTENT */}
                         <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-12 text-white">
@@ -271,7 +258,7 @@ export default function Home() {
 
                             {/* BUTTONS */}
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                                {branchData?.live_url && (
+                                {isLive && (
                                     <div className="mt-4 flex flex-wrap items-center gap-4 text-white">
 
                                         {/* LIVE BADGE */}
@@ -281,23 +268,32 @@ export default function Home() {
                                         {/* STREAM TEXT */}
                                         <span className="text-sm text-white/90">Service is currently streaming</span>
 
-                                        {/* VIEWERS */}
-                                        <div className="flex items-center gap-2 ml-2">
-                                            <span className="h-2 w-2 bg-red-500 rounded-full animate-ping"/>
-                                            <span className="text-sm">👀 {viewers} watching</span>
-                                        </div>
+                                        {isReplay && (
+                                            <div className="mt-4 flex items-center gap-3">
+                                                 <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                                                        🔁 Replay Available
+                                                 </span>
+                                                <span className="text-sm text-white/90">
+                                                     Watch last service recording
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
                                 <button
                                     onClick={handleWatchLive}
                                     className={`px-6 py-3 rounded-full font-semibold ${
-                                        branchData?.live_url
+                                        isLive
                                             ? "bg-red-600 animate-pulse"
                                             : "bg-gray-500"
                                     }`}
                                 >
-                                    {branchData?.live_url ? "Watch Live" : "Watch Live"}
+                                    {isLive
+                                        ? "Join Live Stream"
+                                        : isReplay
+                                            ? "Watch Replay"
+                                            : "No Stream Available"}
                                 </button>
 
                                 <button
@@ -393,7 +389,7 @@ export default function Home() {
                                             className={`cursor-pointer group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${cardAnim()}`}
                                         >
 
-                                            {branchData?.live_url && status === "LIVE NOW" && (
+                                            {isLive && status === "LIVE NOW" && (
                                                 <span
                                                     className="absolute top-4 right-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full animate-pulse z-20">🔴 LIVE</span>
                                             )}
@@ -414,7 +410,7 @@ export default function Home() {
                                                     className="flex justify-between px-6 py-4 text-white text-sm uppercase tracking-widest">
                                                     <span>{formatDate(a.event_date)}</span>
                                                     <span
-                                                        className={`font-semibold ${status === "LIVE NOW" ? "animate-pulse text-red-300" : ""}`}>
+                                                        className={`font-semibold ${status === "LIVE NOW" ? "animate-pulse text-red-600" : ""}`}>
                                         {status}
                                     </span>
                                                 </div>
@@ -450,7 +446,7 @@ export default function Home() {
                                             onClick={() => navigate(`/events/${a.id}`)}
                                             className={`cursor-pointer group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${cardAnim()}`}
                                         >
-                                            {branchData?.live_url && status === "LIVE NOW" && (
+                                            {isLive && status === "LIVE NOW" && (
                                                 <span
                                                     className="absolute top-4 right-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full animate-pulse z-20">🔴 LIVE</span>
                                             )}
@@ -501,14 +497,30 @@ export default function Home() {
 
                 {/* MODAL (UNCHANGED) */}
                 {showNoLiveModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                        {/* BACKDROP */}
                         <div
-                            className="absolute inset-0 bg-black/50"
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                             onClick={() => setShowNoLiveModal(false)}
                         />
-                        <div className="relative z-10 bg-white p-6 rounded-xl">
-                            No live stream available
-                            <button onClick={() => setShowNoLiveModal(false)}>
+
+                        {/* MODAL CARD */}
+                        <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl border border-white/30 p-6 text-center animate-fadeIn">
+
+                            <div className="text-3xl mb-3">📡</div>
+
+                            <h2 className="text-lg font-semibold text-gray-800">
+                                No live service available
+                            </h2>
+
+                            <p className="text-sm text-gray-600 mt-2">
+                                The live broadcast is currently offline. Please check again when the service starts.
+                            </p>
+
+                            <button
+                                onClick={() => setShowNoLiveModal(false)}
+                                className="mt-5 px-5 py-2 rounded-full bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition"
+                            >
                                 Close
                             </button>
                         </div>
