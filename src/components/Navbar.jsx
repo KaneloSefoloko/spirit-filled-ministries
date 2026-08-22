@@ -3,8 +3,11 @@ import { NavLink } from "react-router-dom";
 import { useBranch } from "../context/BranchContext";
 import { supabase } from "../lib/supabaseClient";
 import logo from "../assets/spirit.png";
+import {BookOpen, Video, Radio, HeartHandshake, Mic, Library, ArrowRight, ChevronDown} from "lucide-react";
 
 export default function Navbar() {
+    const [mediaOpen, setMediaOpen] = useState(false);
+    const [mobileMediaOpen, setMobileMediaOpen] = useState(false);
     const { branch, setBranch } = useBranch();
     const [branches, setBranches] = useState([]);
     const [open, setOpen] = useState(false);
@@ -92,34 +95,294 @@ export default function Navbar() {
                 </div>
 
                 {/* DESKTOP NAV */}
-                <div className="hidden md:flex items-center gap-8">
+                <div className="hidden md:flex flex-1 items-center justify-center gap-12">
 
                     <NavLink to="/" className={linkStyle}>Home</NavLink>
-                    <NavLink to="/gallery" className={linkStyle}>Media</NavLink>
-                    <NavLink to="/live" className={linkStyle}>Live</NavLink>
+                    <div
+                    className="relative"
+                    onMouseEnter={() => setMediaOpen(true)}
+                    onMouseLeave={() => setMediaOpen(false)}
+                    >
+                        <button
+                            className={`text-xs uppercase tracking-[0.35em] transition-colors duration-300
+                            ${
+                                scrolled
+                                    ? "text-gray-800 hover:text-purple-600"
+                                    : "text-white hover:text-purple-300"
+                            }`}
+                        >
+                            Media
+                        </button>
+
+                        {mediaOpen && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50">
+                                <div className="w-[1000px] max-w-[95vw] overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-100">
+
+                                    <div className="grid grid-cols-6">
+                                        <NavLink
+                                            to="/sermons"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <BookOpen
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Sermons
+                                            </h3>
+                                        </NavLink>
+
+                                        <NavLink
+                                            to="/videos"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <Video
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Videos
+                                            </h3>
+                                        </NavLink>
+
+                                        <NavLink
+                                            to="/live"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <Radio
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Live
+                                            </h3>
+                                        </NavLink>
+
+                                        <NavLink
+                                            to="/testimonies"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <HeartHandshake
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Testimonies
+                                            </h3>
+                                        </NavLink>
+
+                                        <NavLink
+                                            to="/teachings"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <Mic
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Teachings
+                                            </h3>
+                                        </NavLink>
+
+                                        <NavLink
+                                            to="/resources"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <Library
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            {/* Label Area */}
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                {/* MEDIA */}
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+                                                    transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Media
+                                                </div>
+
+                                                {/* EXPLORE */}
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+                                                     font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+                                                     group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Explore</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3
+                                                className="text-xl font-semibold text-gray-900 transition-transform duration-300 group-hover:-translate-y-1"
+                                            >
+                                                Resources
+                                            </h3>
+                                        </NavLink>
+
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <NavLink to="/events" className={linkStyle}>Events</NavLink>
-                    <NavLink to="/location" className={linkStyle}>Visit Us</NavLink>
-                    <NavLink to="/about" className={linkStyle}>About Us</NavLink>
+                    <NavLink to="/location" className={linkStyle}>Visit</NavLink>
+                    <NavLink to="/about" className={linkStyle}>About</NavLink>
 
                     {/* ✅ BRANCH SELECTOR (MATCHES TYPOGRAPHY) */}
                     <div className="relative">
                         <select
                             value={branch || ""}
                             onChange={(e) => setBranch(e.target.value)}
-                            className="
-                appearance-none
-                w-full sm:w-auto
-                bg-white/70 backdrop-blur-md
-                border border-white/30
-                rounded-full
-                px-5 py-2.5 pr-12
-                text-xs uppercase tracking-[0.35em]
-                text-gray-900
-                shadow-md
-                focus:outline-none
-                focus:ring-2 focus:ring-purple-500
-                transition
-              "
+                            className="appearance-none w-full sm:w-auto bg-white/70 backdrop-blur-md border
+                            border-white/30 rounded-full px-5 py-2.5 pr-12
+                            text-xs uppercase tracking-[0.35em] text-gray-900 shadow-md
+                            focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
                         >
                             <option
                                 value=""
@@ -158,11 +421,89 @@ export default function Navbar() {
             {open && (
                 <div className="md:hidden bg-white/90 backdrop-blur-md text-black px-5 py-3 flex flex-col gap-3 text-sm shadow-lg">
                     <NavLink className="text-sm" to="/" onClick={() => setOpen(false)}>Home</NavLink>
-                    <NavLink className="text-sm" to="/gallery" onClick={() => setOpen(false)}>Media</NavLink>
-                    <NavLink className="text-sm" to="/live" onClick={() => setOpen(false)}>Live</NavLink>
+                    {/*<NavLink className="text-sm" to="/gallery" onClick={() => setOpen(false)}>Media</NavLink>*/}
+                    <div>
+                        <button
+                            onClick={() => setMobileMediaOpen(!mobileMediaOpen)}
+                            className="flex w-full items-center justify-between text-sm"
+                        >
+                            <span>Media</span>
+                            <ChevronDown
+                                className={`w-4 h-4 transition-transform duration-300 ${
+                                    mobileMediaOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                        </button>
+
+                        {mobileMediaOpen && (
+                            <div className="mt-2 ml-4 flex flex-col gap-2 border-l border-gray-200 pl-4">
+
+                                <NavLink
+                                    to="/sermons"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Sermons
+                                </NavLink>
+
+                                <NavLink
+                                    to="/videos"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Videos
+                                </NavLink>
+
+                                <NavLink
+                                    to="/live"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Live
+                                </NavLink>
+
+                                <NavLink
+                                    to="/testimonies"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Testimonies
+                                </NavLink>
+
+                                <NavLink
+                                    to="/teachings"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Teachings
+                                </NavLink>
+
+                                <NavLink
+                                    to="/resources"
+                                    onClick={() => {
+                                        setOpen(false);
+                                        setMobileMediaOpen(false);
+                                    }}
+                                >
+                                    Resources
+                                </NavLink>
+
+                            </div>
+                        )}
+                    </div>
                     <NavLink className="text-sm" to="/events" onClick={() => setOpen(false)}>Events</NavLink>
-                    <NavLink className="text-sm" to="/location" onClick={() => setOpen(false)}>Visit Us</NavLink>
-                    <NavLink className="text-sm" to="/about" onClick={() => setOpen(false)}>About Us</NavLink>
+                    <NavLink className="text-sm" to="/location" onClick={() => setOpen(false)}>Visit</NavLink>
+                    <NavLink className="text-sm" to="/about" onClick={() => setOpen(false)}>About</NavLink>
 
                     <select
                         value={branch || ""}

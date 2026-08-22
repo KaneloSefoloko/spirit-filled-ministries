@@ -1,9 +1,11 @@
 import {useEffect, useState} from "react";
 import {useBranch} from "../context/BranchContext";
 import {supabase} from "../lib/supabaseClient";
-import {FiClock} from "react-icons/fi";
 import {useNavigate} from "react-router-dom";
 import BlogSection from "../components/BlogSection";
+import {CalendarDays, Clock3, PlayCircle, MapPin, ArrowRight, BookOpen,
+Smartphone,
+Library,} from "lucide-react";
 
 /* ========================
    CACHE
@@ -243,7 +245,7 @@ export default function Home() {
                             className="absolute inset-0 bg-cover bg-center scale-105 brightness-110"
                             style={{backgroundImage: `url(${slide.image})`}}
                         />
-                        <div className="absolute inset-0 bg-black/35"/>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
 
                         {/* CONTENT */}
                         <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-12 text-white">
@@ -255,6 +257,30 @@ export default function Home() {
                             <p className="mt-2 text-sm md:text-base text-white/80 max-w-xl">
                                 {slide.subtitle}
                             </p>
+
+                            <div className="flex justify-center md:justify-start gap-4 mt-6">
+
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-4">
+                                    <div className="text-2xl font-bold">
+                                        {upcomingActivities.length}
+                                    </div>
+
+                                    <div className="text-white/70 text-xs uppercase">
+                                        Events
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-4">
+                                    <div className="text-2xl font-bold">
+                                        {posts.length}
+                                    </div>
+
+                                    <div className="text-white/70 text-xs uppercase">
+                                        Articles
+                                    </div>
+                                </div>
+
+                            </div>
 
                             {/* BUTTONS */}
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -294,13 +320,6 @@ export default function Home() {
                                         : isReplay
                                             ? "Watch Replay"
                                             : "No Stream Available"}
-                                </button>
-
-                                <button
-                                    onClick={() => navigate("/events")}
-                                    className="px-6 py-3 rounded-full bg-white/10 border border-white/30"
-                                >
-                                    Upcoming Events
                                 </button>
                             </div>
 
@@ -345,154 +364,599 @@ export default function Home() {
                 ))}
             </div>
 
+            <div className="max-w-6xl mx-auto px-6 -mt-10 relative z-20">
+
+                <div className="grid md:grid-cols-3 gap-6">
+
+                    <div
+                        onClick={handleWatchLive}
+                        className="cursor-pointer bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                    >
+                        <PlayCircle className="w-8 h-8 text-purple-600 mb-4" />
+
+                        <h3 className="font-semibold text-lg mb-2">
+                            Watch Live
+                        </h3>
+
+                        <p className="text-gray-500 text-sm">
+                            Join live services and special broadcasts.
+                        </p>
+                    </div>
+
+                    <div
+                        onClick={() => navigate("/events")}
+                        className="cursor-pointer bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                    >
+                        <CalendarDays className="w-8 h-8 text-purple-600 mb-4" />
+
+                        <h3 className="font-semibold text-lg mb-2">
+                            Upcoming Events
+                        </h3>
+
+                        <p className="text-gray-500 text-sm">
+                            Conferences, services and ministry gatherings.
+                        </p>
+                    </div>
+
+                    <div
+                        onClick={() => navigate("/location")}
+                        className="cursor-pointer bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                    >
+                        <MapPin className="w-8 h-8 text-purple-600 mb-4" />
+
+                        <h3 className="font-semibold text-lg mb-2">
+                            Visit Us
+                        </h3>
+
+                        <p className="text-gray-500 text-sm">
+                            Find a branch near you.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="h-12" />
+
             {/* ================= MESSAGE (NEW STYLE ONLY) ================= */}
             <div className="px-4 sm:px-6 md:px-10">
                 {dailyMessage && (
-                    <div className="mb-12">
+                    <div className="mb-16 px-4">
                         <div
-                            className="w-full max-w-4xl mx-auto rounded-2xl px-4 sm:px-6 py-6 md:py-8 text-center bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg">
-                            <p className="text-xs uppercase tracking-[0.35em] text-purple-600 mb-3">
-                                Message of the Day
-                            </p>
-                            <p className="text-base md:text-lg uppercase tracking-[0.2em] md:tracking-[0.25em] text-gray-800">
-                                “{dailyMessage}”
-                            </p>
+                            className="relative max-w-5xl mx-auto overflow-hidden rounded-[2rem] bg-white/70
+                            backdrop-blur-xl border border-white/30 shadow-xl p-10 md:p-14 text-center"
+                        >
+                            {/* Decorative gradient blobs */}
+                            <div
+                                className="absolute -top-20 -left-20 w-60 h-60 bg-purple-200/40 rounded-full blur-3xl"/>
+                            <div
+                                className="absolute -bottom-20 -right-20 w-60 h-60 bg-sky-200/40 rounded-full blur-3xl"/>
+
+                            <div className="relative z-10">
+                                <span
+                                    className="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-xs uppercase tracking-[0.3em] mb-6">
+                                  ✨ Daily Encouragement
+                                </span>
+
+                                <blockquote
+                                    className="text-2xl md:text-4xl font-light leading-relaxe text-gray-800">
+                                    “{dailyMessage}”
+                                </blockquote>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {/* ================= EVENTS (NEW CARD STYLE ONLY) ================= */}
                 <div className="px-4 sm:px-6 md:px-10">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl uppercase tracking-[0.3em] md:tracking-[0.4em] font-medium mb-6 md:mb-8 text-purple-600 text-left">
-                        Upcoming Events
-                    </h2>
+                    <div className="flex justify-between items-end mb-8">
+
+                        <div>
+                            <p className="uppercase tracking-[0.35em] text-purple-600 text-xs mb-2">
+                                Calendar
+                            </p>
+
+                            <h2 className="text-3xl font-bold">
+                                Upcoming Events
+                            </h2>
+                        </div>
+
+                        <button
+                            onClick={() => navigate("/events")}
+                            className="text-purple-600 font-semibold"
+                        >
+                            View All →
+                        </button>
+
+                    </div>
                 </div>
 
-                <div>
-                    <div
-                        className="w-full max-w-4xl md:max-w-5xl mx-auto px-2 sm:px-4 p-4 md:p-8 rounded-2xl bg-white/80 backdrop-blur-md border border-white/30 shadow-lg">
-                        {topTwoEvents.length === 0 ? (
-                            <p className="uppercase tracking-[0.35em] text-red-700 text-sm text-center">
-                                No events yet
+                <div className="max-w-7xl mx-auto">
+
+                    {topTwoEvents.length === 0 ? (
+                        <div className="text-center py-24">
+
+                            <CalendarDays className="w-16 h-16 mx-auto mb-6 text-purple-300" />
+
+                            <p className="uppercase tracking-[0.4em] text-purple-600 text-xs mb-4">
+                                Events
                             </p>
-                        ) : (
-                            <div className="space-y-5 md:space-y-8">
 
-                                {/* FEATURED */}
-                                {topTwoEvents[0] && (() => {
-                                    const a = topTwoEvents[0];
-                                    const status = getCountdown(a.event_date);
+                            <h3 className="text-4xl font-bold mb-4">
+                                No Upcoming Events
+                            </h3>
 
-                                    return (
+                            <p className="text-gray-500 max-w-xl mx-auto">
+                                Conferences, worship gatherings and special ministry events
+                                will appear here when scheduled.
+                            </p>
+
+                        </div>
+                    ) : (
+                        <div className="space-y-10">
+
+                            {/* FEATURED EVENT */}
+                            {topTwoEvents[0] && (() => {
+                                const a = topTwoEvents[0];
+                                const status = getCountdown(a.event_date);
+
+                                return (
+                                    <div
+                                        onClick={() => navigate(`/events/${a.id}`)}
+                                        className={`
+              group
+              relative
+              min-h-[550px]
+              overflow-hidden
+              rounded-[2rem]
+              cursor-pointer
+
+              shadow-[0_20px_60px_rgba(0,0,0,0.25)]
+
+              hover:scale-[1.01]
+              hover:-translate-y-1
+
+              transition-all
+              duration-500
+
+              ${cardAnim()}
+            `}
+                                    >
+
                                         <div
-                                            onClick={() => navigate(`/events/${a.id}`)}
-                                            className={`cursor-pointer group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${cardAnim()}`}
-                                        >
+                                            className="
+                absolute inset-0
+                bg-cover bg-center
+                transition-transform
+                duration-[6000ms]
+                group-hover:scale-110
+              "
+                                            style={{
+                                                backgroundImage: `url(${
+                                                    a.image_url ||
+                                                    "https://images.unsplash.com/photo-1507679799987-c73779587ccf"
+                                                })`,
+                                            }}
+                                        />
 
-                                            {isLive && status === "LIVE NOW" && (
-                                                <span
-                                                    className="absolute top-4 right-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full animate-pulse z-20">🔴 LIVE</span>
-                                            )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
 
-                                            <div
-                                                className="absolute inset-0 bg-cover bg-center"
-                                                style={{
-                                                    backgroundImage: `url(${a.image_url || "https://images.unsplash.com/photo-1507679799987-c73779587ccf"})`,
-                                                }}
-                                            />
-
-                                            <div
-                                                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"/>
-
-                                            <div className="relative z-10">
-
-                                                <div
-                                                    className="flex justify-between px-6 py-4 text-white text-sm uppercase tracking-widest">
-                                                    <span>{formatDate(a.event_date)}</span>
-                                                    <span
-                                                        className={`font-semibold ${status === "LIVE NOW" ? "animate-pulse text-red-600" : ""}`}>
-                                        {status}
-                                    </span>
-                                                </div>
-
-                                                <div className="p-8 text-white">
-                                                    <h3 className="text-lg md:text-2xl font-bold uppercase tracking-wide group-hover:text-purple-300 transition">
-                                                        {a.title}
-                                                    </h3>
-
-                                                    <div
-                                                        className="mt-3 md:mt-4 flex items-center text-xs md:text-sm gap-2 opacity-90">
-                                                        <FiClock/>
-                                                        {formatTime(a.event_date)}
-                                                    </div>
-
-                                                    <div
-                                                        className="mt-6 text-sm uppercase tracking-widest font-semibold group-hover:underline">
-                                                        View Details →
-                                                    </div>
-                                                </div>
+                                        {status === "LIVE NOW" && (
+                                            <div className="absolute top-6 right-6 z-20">
+                <span className="px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold animate-pulse">
+                  🔴 LIVE NOW
+                </span>
                                             </div>
-                                        </div>
-                                    );
-                                })()}
+                                        )}
 
-                                {/* SECOND */}
-                                {topTwoEvents[1] && (() => {
-                                    const a = topTwoEvents[1];
-                                    const status = getCountdown(a.event_date);
-
-                                    return (
-                                        <div
-                                            onClick={() => navigate(`/events/${a.id}`)}
-                                            className={`cursor-pointer group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${cardAnim()}`}
-                                        >
-                                            {isLive && status === "LIVE NOW" && (
-                                                <span
-                                                    className="absolute top-4 right-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full animate-pulse z-20">🔴 LIVE</span>
-                                            )}
+                                        <div className="relative z-10 flex h-full flex-col justify-end p-10 md:p-14 text-white">
 
                                             <div
-                                                className="absolute inset-0 bg-cover bg-center"
-                                                style={{
-                                                    backgroundImage: `url(${a.image_url || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30"})`,
-                                                }}
-                                            />
-
-                                            <div className="absolute inset-0 bg-black/60"/>
-
-                                            <div className="relative z-10">
-
-                                                <div
-                                                    className="flex justify-between px-5 py-3 text-white text-xs uppercase tracking-widest">
-                                                    <span>{formatDate(a.event_date)}</span>
-                                                    <span>{status}</span>
-                                                </div>
-
-                                                <div className="p-6 text-white">
-                                                    <h3 className="text-base md:text-lg font-semibold group-hover:text-purple-300 transition">
-                                                        {a.title}
-                                                    </h3>
-
-                                                    <div className="mt-3 flex items-center text-sm gap-2 opacity-90">
-                                                        <FiClock/>
-                                                        {formatTime(a.event_date)}
-                                                    </div>
-                                                </div>
+                                                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  bg-white/10
+                  backdrop-blur-xl
+                  border border-white/20
+                  px-4 py-2
+                  text-xs
+                  uppercase
+                  tracking-[0.3em]
+                  w-fit
+                  mb-6
+                "
+                                            >
+                                                ✨ Featured Event
                                             </div>
+
+                                            <div className="inline-flex w-fit rounded-full bg-purple-500/30 backdrop-blur-md px-4 py-2 text-sm mb-6">
+                                                {status}
+                                            </div>
+
+                                            <h3 className="text-3xl md:text-5xl font-bold leading-tight max-w-4xl">
+                                                {a.title}
+                                            </h3>
+
+                                            <div className="flex flex-wrap items-center gap-8 mt-8">
+
+                                                <div className="flex items-center gap-2 text-white/80">
+                                                    <CalendarDays className="w-5 h-5" />
+                                                    {formatDate(a.event_date)}
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-white/80">
+                                                    <Clock3 className="w-5 h-5" />
+                                                    {formatTime(a.event_date)}
+                                                </div>
+
+                                            </div>
+
+                                            <div
+                                                className="
+                  mt-10
+                  inline-flex
+                  items-center
+                  gap-3
+                  bg-white
+                  text-black
+                  rounded-full
+                  px-6 py-3
+                  font-semibold
+                  transition-all
+                  duration-300
+                  group-hover:gap-5
+                  w-fit
+                "
+                                            >
+                                                View Event
+                                                <ArrowRight className="w-4 h-4" />
+                                            </div>
+
                                         </div>
-                                    );
-                                })()}
+                                    </div>
+                                );
+                            })()}
+
+                            {/* SECOND EVENT */}
+                            {topTwoEvents[1] && (() => {
+                                const a = topTwoEvents[1];
+                                const status = getCountdown(a.event_date);
+
+                                return (
+                                    <div
+                                        onClick={() => navigate(`/events/${a.id}`)}
+                                        className={`
+    group
+    cursor-pointer
+
+    bg-white/80
+    backdrop-blur-xl
+
+    rounded-[2rem]
+
+    border border-white/30
+
+    p-8
+
+    shadow-lg
+
+    hover:shadow-2xl
+    hover:-translate-y-2
+
+    transition-all
+    duration-300
+
+    ${cardAnim()}
+  `}
+                                    >
+
+                                        <div className="flex items-start justify-between mb-6">
+
+                                            <div>
+
+                                                <div className="text-xs uppercase tracking-[0.3em] text-purple-600 mb-3">
+                                                    Upcoming
+                                                </div>
+
+                                                <h3 className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition">
+                                                    {a.title}
+                                                </h3>
+
+                                            </div>
+
+                                            <div className="bg-purple-100 text-purple-700 px-3 py-2 rounded-full text-sm font-semibold">
+                                                {status}
+                                            </div>
+
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-6 text-gray-500 mb-8">
+
+                                            <div className="flex items-center gap-2">
+                                                <CalendarDays className="w-4 h-4" />
+                                                {formatDate(a.event_date)}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <Clock3 className="w-4 h-4" />
+                                                {formatTime(a.event_date)}
+                                            </div>
+
+                                        </div>
+
+                                        <div className="inline-flex items-center gap-2 text-purple-600 font-semibold group-hover:gap-4 transition-all">
+                                            View Event
+                                            <ArrowRight className="w-4 h-4" />
+                                        </div>
+
+                                    </div>
+                                );
+                            })()}
+
+                        </div>
+                    )}
+                </div>
+
+                {/* ================= GROW IN GOD'S WORD ================= */}
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+
+                    <div
+                        className="
+      relative
+      overflow-hidden
+      max-w-7xl
+      mx-auto
+
+      rounded-[2rem]
+
+      bg-gradient-to-br
+      from-purple-700
+      via-purple-600
+      to-sky-600
+
+      shadow-[0_25px_80px_rgba(0,0,0,0.25)]
+    "
+                    >
+
+                        {/* Background Glow */}
+                        <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+                        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+
+                        <div className="relative z-10 p-10 md:p-16">
+
+                            <p className="uppercase tracking-[0.45em] text-xs text-white/70 mb-4">
+                                Resources
+                            </p>
+
+                            <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+                                Grow In God's Word
+                            </h2>
+
+                            <p className="max-w-2xl text-white/80 text-lg mb-10">
+                                Discover trusted resources to help you understand Scripture,
+                                grow in faith, and develop a deeper relationship with Christ.
+                            </p>
+
+                            <div className="grid md:grid-cols-3 gap-6">
+
+                                {/* HOW TO READ THE BIBLE */}
+                                <a
+                                    href="https://bibleproject.com/videos/collections/how-to-read-the-bible/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="
+            group
+            bg-white/10
+            backdrop-blur-xl
+            border border-white/20
+            rounded-3xl
+            p-8
+            hover:bg-white/20
+            hover:-translate-y-2
+            transition-all
+            duration-300
+          "
+                                >
+                                    <BookOpen className="w-10 h-10 mb-5 text-white" />
+
+                                    <h3 className="text-xl font-bold text-white mb-3">
+                                        How To Read The Bible
+                                    </h3>
+
+                                    <p className="text-white/70 text-sm mb-6">
+                                        Learn how the Bible fits together and discover practical ways
+                                        to read Scripture with confidence.
+                                    </p>
+
+                                    <div className="flex items-center gap-2 text-white font-semibold">
+                                        Explore
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </a>
+
+                                {/* BIBLE APP */}
+                                <a
+                                    href="https://www.bible.com/app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="
+            group
+            bg-white/10
+            backdrop-blur-xl
+            border border-white/20
+            rounded-3xl
+            p-8
+            hover:bg-white/20
+            hover:-translate-y-2
+            transition-all
+            duration-300
+          "
+                                >
+                                    <Smartphone className="w-10 h-10 mb-5 text-white" />
+
+                                    <h3 className="text-xl font-bold text-white mb-3">
+                                        Bible App
+                                    </h3>
+
+                                    <p className="text-white/70 text-sm mb-6">
+                                        Read the Bible, listen to audio Scripture, save notes,
+                                        and follow reading plans wherever you are.
+                                    </p>
+
+                                    <div className="flex items-center gap-2 text-white font-semibold">
+                                        Download
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </a>
+
+                                {/* MORE RESOURCES */}
+                                <div
+                                    onClick={() => navigate("/resources")}
+                                    className="
+            group
+            cursor-pointer
+            bg-white/10
+            backdrop-blur-xl
+            border border-white/20
+            rounded-3xl
+            p-8
+            hover:bg-white/20
+            hover:-translate-y-2
+            transition-all
+            duration-300
+          "
+                                >
+                                    <Library className="w-10 h-10 mb-5 text-white" />
+
+                                    <h3 className="text-xl font-bold text-white mb-3">
+                                        More Resources
+                                    </h3>
+
+                                    <p className="text-white/70 text-sm mb-6">
+                                        Explore additional study tools, recommended resources,
+                                        and practical guides to strengthen your walk with Christ.
+                                    </p>
+
+                                    <div className="flex items-center gap-2 text-white font-semibold">
+                                        Explore
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </div>
 
                             </div>
-                        )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+                    <div
+                        className="
+      max-w-7xl
+      mx-auto
+      overflow-hidden
+      rounded-[2rem]
+      bg-white
+      shadow-[0_20px_60px_rgba(0,0,0,0.12)]
+    "
+                    >
+                        <div className="grid lg:grid-cols-2">
+
+                            {/* IMAGE */}
+                            <div className="relative min-h-[500px]">
+
+                                <img
+                                    src="https://res.cloudinary.com/dkwfi3iku/image/upload/f_auto,q_auto:best,w_2400/v1776697658/IMG_9252_jiufkn.jpg"
+                                    alt="Spirit Filled Ministries Leadership"
+                                    className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+          "
+                                />
+
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
+
+                            </div>
+
+                            {/* CONTENT */}
+                            <div className="flex items-center p-10 md:p-16">
+
+                                <div>
+
+                                    <p className="uppercase tracking-[0.4em] text-purple-600 text-xs mb-4">
+                                        Leadership
+                                    </p>
+
+                                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                                        A Message From Our Parents
+                                    </h2>
+
+                                    <p className="text-gray-600 leading-relaxed mb-6">
+                                        Welcome to Spirit Filled Ministries.
+                                        Our heart is to see people experience the freedom,
+                                        healing, deliverance and transforming power of Jesus Christ.
+                                    </p>
+
+                                    <p className="text-gray-600 leading-relaxed mb-8">
+                                        Whether you are taking your first steps in faith or have
+                                        been walking with Christ for many years, we pray that you
+                                        will find a place of growth, encouragement and purpose.
+                                    </p>
+
+                                    <button
+                                        onClick={() => navigate("/about")}
+                                        className="
+              inline-flex
+              items-center
+              gap-3
+              rounded-full
+              bg-purple-600
+              text-white
+              px-6
+              py-3
+              font-semibold
+              transition-all
+              duration-300
+              hover:gap-5
+              hover:bg-purple-700
+            "
+                                    >
+                                        Learn More
+                                        <ArrowRight className="w-4 h-4" />
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
                 {/* BLOG (UNCHANGED) */}
                 {posts.length > 0 && (
-                    <div className="mt-16 px-4 sm:px-6 md:px-10">
-                        <BlogSection posts={posts}/>
-                    </div>
+                    <>
+                        <div className="max-w-4xl mx-auto text-center py-20">
+
+                            <p className="text-3xl md:text-4xl font-light italic text-gray-700">
+                                “Where the Spirit of the Lord is,
+                                there is freedom.”
+                            </p>
+
+                            <p className="mt-4 uppercase tracking-[0.35em] text-purple-600 text-xs">
+                                2 Corinthians 3:17
+                            </p>
+
+                        </div>
+
+                        <div className="mt-16 px-4 sm:px-6 md:px-10">
+                            <BlogSection posts={posts} />
+                        </div>
+                    </>
                 )}
 
                 {/* MODAL (UNCHANGED) */}

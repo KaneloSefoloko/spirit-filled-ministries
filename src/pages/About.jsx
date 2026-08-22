@@ -40,7 +40,7 @@ export default function About() {
 
             {/* HEADER */}
             <PageHeader
-                label="About Us"
+                label="About"
                 title="Spirit Filled Ministries"
             />
 

@@ -21,6 +21,10 @@ import PostDetail from "./pages/PostDetail";
 import Events from "./pages/Events.jsx";
 import EventDetails from "./pages/EventDetails.jsx";
 import Stories from "./pages/Stories";
+import ResetPassword from "./pages/ResetPassword.jsx";
+import Sermons from "./pages/Sermons";
+import Resources from "./pages/Resources.jsx";
+import Videos from "./pages/Videos.jsx";
 
 export default function App() {
     return (
@@ -48,9 +52,15 @@ export default function App() {
                                 <Route path="/events" element={<Events />} />
                                 <Route path="/events/:id" element={<EventDetails />} />
                                 <Route path="/stories" element={<Stories />} />
+                                <Route path="/sermons" element={<Sermons />} />
+                                <Route path="/resources" element={<Resources />} />
+                                <Route path="/videos" element={<Videos />} />
+                                <Route path="/teachings" element={<Videos />} />
+                                <Route path="/testimonies" element={<Videos />} />
 
                                 {/* ADMIN */}
                                 <Route path="/admin" element={<AdminLogin />} />
+                                <Route path="/reset-password" element={<ResetPassword />} />
                                 <Route
                                     path="/admin/dashboard"
                                     element={

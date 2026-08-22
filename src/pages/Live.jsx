@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from "react";
-import { useBranch } from "../context/BranchContext";
-import { supabase } from "../lib/supabaseClient";
+import {useEffect, useState, useRef} from "react";
+import {useBranch} from "../context/BranchContext";
+import {supabase} from "../lib/supabaseClient";
 
 export default function Live() {
-    const { branch } = useBranch();
+    const {branch} = useBranch();
 
     const [branchData, setBranchData] = useState(null);
     const [showMiniPlayer, setShowMiniPlayer] = useState(false);
@@ -18,6 +18,7 @@ export default function Live() {
        STREAM STATUS
     ======================== */
     const streamStatus = branchData?.stream_status || "offline";
+    const chatEnabled = streamStatus === "live";
 
     const videoUrl =
         streamStatus === "live"
@@ -40,7 +41,7 @@ export default function Live() {
         if (!branch) return;
 
         async function load() {
-            const { data } = await supabase
+            const {data} = await supabase
                 .from("branches")
                 .select("*")
                 .eq("id", branch)
@@ -48,11 +49,11 @@ export default function Live() {
 
             setBranchData(data);
 
-            const { data: msgs } = await supabase
+            const {data: msgs} = await supabase
                 .from("live_chat_messages")
                 .select("*")
                 .eq("branch_id", branch)
-                .order("created_at", { ascending: true });
+                .order("created_at", {ascending: true});
 
             setMessages(msgs || []);
         }
@@ -89,7 +90,7 @@ export default function Live() {
        AUTO SCROLL CHAT
     ======================== */
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        bottomRef.current?.scrollIntoView({behavior: "smooth"});
     }, [messages]);
 
     /* ========================
@@ -115,6 +116,7 @@ export default function Live() {
        SEND MESSAGE
     ======================== */
     const sendMessage = async () => {
+        if (streamStatus !== "live") return;
         if (!text.trim()) return;
 
         await supabase.from("live_chat_messages").insert({
@@ -180,7 +182,7 @@ export default function Live() {
                             <iframe
                                 src={embedUrl}
                                 className="absolute top-0 left-0 w-full h-full"
-                                style={{ border: "none" }}
+                                style={{border: "none"}}
                                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                                 allowFullScreen
                             />
@@ -216,44 +218,53 @@ export default function Live() {
                         Live Chat
                     </div>
 
-                    {/* MESSAGES */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
-                        {messages.map((m) => (
-                            <div key={m.id}>
+                    {chatEnabled ? (
+                        <>
+                            {/* MESSAGES */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
+                                {messages.map((m) => (
+                                    <div key={m.id}>
                                 <span className="font-semibold text-purple-600">
                                     {m.user_name}:
                                 </span>{" "}
-                                {m.message}
+                                        {m.message}
+                                    </div>
+                                ))}
+                                <div ref={bottomRef}/>
                             </div>
-                        ))}
-                        <div ref={bottomRef} />
-                    </div>
 
-                    {/* INPUT */}
-                    <div className="p-3 border-t flex gap-2">
-                        <input
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            placeholder="Type message..."
-                            className="flex-1 border p-2 rounded-lg text-sm"
-                            onKeyDown={(e) =>
-                                e.key === "Enter" && sendMessage()
-                            }
-                        />
+                            {/* INPUT */}
+                            <div className="p-3 border-t flex gap-2">
+                                <input
+                                    value={text}
+                                    onChange={(e) => setText(e.target.value)}
+                                    placeholder="Type message..."
+                                    className="flex-1 border p-2 rounded-lg text-sm"
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && sendMessage()
+                                    }
+                                />
 
-                        <button
-                            onClick={sendMessage}
-                            className="bg-purple-600 text-white px-4 rounded-lg"
-                        >
-                            Send
-                        </button>
-                    </div>
+                                <button
+                                    onClick={sendMessage}
+                                    className="bg-purple-600 text-white px-4 rounded-lg"
+                                >
+                                    Send
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-gray-500 text-sm p-6 text-center">
+                            Live chat is available only during live services.
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* ================= MINI PLAYER ================= */}
             {embedUrl && showMiniPlayer && (
-                <div className="fixed bottom-4 right-4 w-64 sm:w-72 aspect-video bg-black rounded-xl shadow-2xl z-50 overflow-hidden border">
+                <div
+                    className="fixed bottom-4 right-4 w-64 sm:w-72 aspect-video bg-black rounded-xl shadow-2xl z-50 overflow-hidden border">
 
                     <button
                         onClick={() => setShowMiniPlayer(false)}
@@ -265,7 +276,7 @@ export default function Live() {
                     <iframe
                         src={embedUrl}
                         className="absolute top-0 left-0 w-full h-full"
-                        style={{ border: "none" }}
+                        style={{border: "none"}}
                         allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                         allowFullScreen
                     />

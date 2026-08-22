@@ -5,10 +5,16 @@ import { supabase } from "../lib/supabaseClient";
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
     const [loading, setLoading] = useState(false);
+    const [resetting, setResetting] = useState(false);
+    const [resetSent, setResetSent] = useState(false);
 
     const navigate = useNavigate();
 
+    // ============================
+    // LOGIN
+    // ============================
     const login = async () => {
         if (!email || !password) {
             alert("Enter email & password");
@@ -31,10 +37,40 @@ export default function AdminLogin() {
         }
     };
 
+    // ============================
+    // FORGOT PASSWORD
+    // ============================
+    const resetPassword = async () => {
+        if (!email) {
+            alert("Please enter your admin email address first.");
+            return;
+        }
+
+        setResetting(true);
+        setResetSent(false);
+
+        const { error } = await supabase.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo: `${window.location.origin}/reset-password`,
+            }
+        );
+
+        setResetting(false);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        setResetSent(true);
+    };
+
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#5e6069] flex items-center justify-center px-6">
 
             {/* PREMIUM BACKGROUND GLOWS */}
+
             <div className="absolute top-[-180px] left-[-120px] h-[420px] w-[420px] rounded-full bg-purple-600/20 blur-3xl" />
 
             <div className="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-sky-500/20 blur-3xl" />
@@ -42,6 +78,7 @@ export default function AdminLogin() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_45%)]" />
 
             {/* CARD */}
+
             <div
                 className="
                     relative
@@ -58,12 +95,15 @@ export default function AdminLogin() {
             >
 
                 {/* TOP LINE */}
+
                 <div className="mb-8 text-center">
 
                     <div className="inline-flex items-center justify-center px-4 py-1 rounded-full border border-white/10 bg-white/5 mb-5">
+
                         <span className="text-[10px] uppercase tracking-[0.4em] text-gray-300 font-medium">
                             Secure Access
                         </span>
+
                     </div>
 
                     <h1 className="text-4xl font-[Poppins] font-semibold tracking-tight text-white mb-3">
@@ -74,10 +114,13 @@ export default function AdminLogin() {
                         Sign in to manage events, livestreams, branches,
                         media and ministry content.
                     </p>
+
                 </div>
 
                 {/* EMAIL */}
+
                 <div className="mb-4">
+
                     <label className="block text-[11px] uppercase tracking-[0.3em] text-gray-400 mb-3">
                         Email Address
                     </label>
@@ -86,7 +129,10 @@ export default function AdminLogin() {
                         type="email"
                         placeholder="Enter your email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            setResetSent(false);
+                        }}
                         className="
                             w-full
                             rounded-2xl
@@ -107,10 +153,13 @@ export default function AdminLogin() {
                             focus:ring-purple-500/10
                         "
                     />
+
                 </div>
 
                 {/* PASSWORD */}
-                <div className="mb-7">
+
+                <div className="mb-3">
+
                     <label className="block text-[11px] uppercase tracking-[0.3em] text-gray-400 mb-3">
                         Password
                     </label>
@@ -120,6 +169,11 @@ export default function AdminLogin() {
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                login();
+                            }
+                        }}
                         className="
                             w-full
                             rounded-2xl
@@ -140,9 +194,52 @@ export default function AdminLogin() {
                             focus:ring-purple-500/10
                         "
                     />
+
                 </div>
 
-                {/* BUTTON */}
+                {/* FORGOT PASSWORD */}
+
+                <div className="flex justify-end mb-7">
+
+                    <button
+                        type="button"
+                        onClick={resetPassword}
+                        disabled={resetting}
+                        className="
+                            text-sm
+                            text-purple-300
+                            hover:text-purple-200
+                            transition
+                            font-medium
+                            disabled:opacity-50
+                        "
+                    >
+                        {resetting
+                            ? "Sending reset link..."
+                            : "Forgot password?"}
+                    </button>
+
+                </div>
+
+                {/* RESET SUCCESS */}
+
+                {resetSent && (
+                    <div className="mb-6 rounded-2xl border border-green-400/20 bg-green-500/10 p-4">
+
+                        <p className="text-sm text-green-300 leading-relaxed">
+                            Password reset link sent.
+                        </p>
+
+                        <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+                            Check your email and click the new link to
+                            create a new password.
+                        </p>
+
+                    </div>
+                )}
+
+                {/* LOGIN BUTTON */}
+
                 <button
                     onClick={login}
                     disabled={loading}
@@ -170,20 +267,27 @@ export default function AdminLogin() {
                 >
 
                     <span className="relative z-10">
-                        {loading ? "Logging in..." : "Access Dashboard"}
+                        {loading
+                            ? "Logging in..."
+                            : "Access Dashboard"}
                     </span>
 
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/10" />
+
                 </button>
 
                 {/* FOOTER */}
+
                 <div className="mt-6 text-center">
+
                     <p className="text-xs tracking-wide text-gray-200">
                         Protected ministry administration system
                     </p>
+
                 </div>
 
             </div>
+
         </div>
     );
 }

@@ -58,7 +58,7 @@ export default function Footer() {
                             <li><NavLink to="/about" className="hover:text-purple-600 transition">About</NavLink></li>
                             <li><NavLink to="/live" className="hover:text-purple-600 transition">Live</NavLink></li>
                             <li><NavLink to="/events" className="hover:text-purple-600 transition">Events</NavLink></li>
-                            <li><NavLink to="/location" className="hover:text-purple-600 transition">Visit Us</NavLink></li>
+                            <li><NavLink to="/location" className="hover:text-purple-600 transition">Visit</NavLink></li>
                         </ul>
                     </nav>
 
