@@ -25,6 +25,7 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import Sermons from "./pages/Sermons";
 import Resources from "./pages/Resources.jsx";
 import Videos from "./pages/Videos.jsx";
+import Contact from "./pages/Contact.jsx";
 
 export default function App() {
     return (
@@ -57,6 +58,7 @@ export default function App() {
                                 <Route path="/videos" element={<Videos />} />
                                 <Route path="/teachings" element={<Videos />} />
                                 <Route path="/testimonies" element={<Videos />} />
+                                <Route path="/contact" element={<Contact />} />
 
                                 {/* ADMIN */}
                                 <Route path="/admin" element={<AdminLogin />} />

@@ -4,8 +4,7 @@ import {supabase} from "../lib/supabaseClient";
 import {useNavigate} from "react-router-dom";
 import BlogSection from "../components/BlogSection";
 import {CalendarDays, Clock3, PlayCircle, MapPin, ArrowRight, BookOpen,
-Smartphone,
-Library,} from "lucide-react";
+Smartphone, HandHelping, Library, HeartHandshake, Shield} from "lucide-react";
 
 /* ========================
    CACHE
@@ -503,34 +502,14 @@ export default function Home() {
                                 return (
                                     <div
                                         onClick={() => navigate(`/events/${a.id}`)}
-                                        className={`
-              group
-              relative
-              min-h-[550px]
-              overflow-hidden
-              rounded-[2rem]
-              cursor-pointer
-
-              shadow-[0_20px_60px_rgba(0,0,0,0.25)]
-
-              hover:scale-[1.01]
-              hover:-translate-y-1
-
-              transition-all
-              duration-500
-
-              ${cardAnim()}
-            `}
+                                        className={`group relative min-h-[550px] overflow-hidden
+                                         rounded-[2rem] cursor-pointer shadow-[0_20px_60px_rgba(0,0,0,0.25)] hover:scale-[1.01] hover:-translate-y-1 transition-all duration-500
+                                          ${cardAnim()}
+                                          `}
                                     >
 
                                         <div
-                                            className="
-                absolute inset-0
-                bg-cover bg-center
-                transition-transform
-                duration-[6000ms]
-                group-hover:scale-110
-              "
+                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-[6000ms] group-hover:scale-110"
                                             style={{
                                                 backgroundImage: `url(${
                                                     a.image_url ||
@@ -543,30 +522,17 @@ export default function Home() {
 
                                         {status === "LIVE NOW" && (
                                             <div className="absolute top-6 right-6 z-20">
-                <span className="px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold animate-pulse">
-                  🔴 LIVE NOW
-                </span>
+                                                <span
+                                                    className="px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold animate-pulse">
+                                                         🔴 LIVE NOW
+                                                </span>
                                             </div>
                                         )}
 
                                         <div className="relative z-10 flex h-full flex-col justify-end p-10 md:p-14 text-white">
 
                                             <div
-                                                className="
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-full
-                  bg-white/10
-                  backdrop-blur-xl
-                  border border-white/20
-                  px-4 py-2
-                  text-xs
-                  uppercase
-                  tracking-[0.3em]
-                  w-fit
-                  mb-6
-                "
+                                                className=" inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur- mb-6"
                                             >
                                                 ✨ Featured Event
                                             </div>
@@ -594,21 +560,8 @@ export default function Home() {
                                             </div>
 
                                             <div
-                                                className="
-                  mt-10
-                  inline-flex
-                  items-center
-                  gap-3
-                  bg-white
-                  text-black
-                  rounded-full
-                  px-6 py-3
-                  font-semibold
-                  transition-all
-                  duration-300
-                  group-hover:gap-5
-                  w-fit
-                "
+                                                className="mt-10 inline-flex items-center gap-3 bg-white text-black rounded-full px-6 py-3
+                                                font-semibold transition-all duration-30 group-hover:gap-5 w-fit"
                                             >
                                                 View Event
                                                 <ArrowRight className="w-4 h-4" />
@@ -627,29 +580,10 @@ export default function Home() {
                                 return (
                                     <div
                                         onClick={() => navigate(`/events/${a.id}`)}
-                                        className={`
-    group
-    cursor-pointer
-
-    bg-white/80
-    backdrop-blur-xl
-
-    rounded-[2rem]
-
-    border border-white/30
-
-    p-8
-
-    shadow-lg
-
-    hover:shadow-2xl
-    hover:-translate-y-2
-
-    transition-all
-    duration-300
-
-    ${cardAnim()}
-  `}
+                                        className={`group cursor-pointer bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/30 p-8
+                                        shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 
+                                        ${cardAnim()}
+                                         `}
                                     >
 
                                         <div className="flex items-start justify-between mb-6">
@@ -703,21 +637,8 @@ export default function Home() {
                 <div className="py-24 px-4 sm:px-6 md:px-10">
 
                     <div
-                        className="
-      relative
-      overflow-hidden
-      max-w-7xl
-      mx-auto
-
-      rounded-[2rem]
-
-      bg-gradient-to-br
-      from-purple-700
-      via-purple-600
-      to-sky-600
-
-      shadow-[0_25px_80px_rgba(0,0,0,0.25)]
-    "
+                        className="relative overflow-hidden max-w-7xl mx-auto rounded-[2rem] bg-gradient-to-br from-purple-700 via-purple-600
+                        to-sky-600 shadow-[0_25px_80px_rgba(0,0,0,0.25)]"
                     >
 
                         {/* Background Glow */}
@@ -746,20 +667,9 @@ export default function Home() {
                                     href="https://bibleproject.com/videos/collections/how-to-read-the-bible/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="
-            group
-            bg-white/10
-            backdrop-blur-xl
-            border border-white/20
-            rounded-3xl
-            p-8
-            hover:bg-white/20
-            hover:-translate-y-2
-            transition-all
-            duration-300
-          "
-                                >
-                                    <BookOpen className="w-10 h-10 mb-5 text-white" />
+                                    className="group bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 hover:bg-white/20
+                                     hover:-translate-y-2 transition-all duration-300">
+                                    <BookOpen className="w-10 h-10 mb-5 text-white"/>
 
                                     <h3 className="text-xl font-bold text-white mb-3">
                                         How To Read The Bible
@@ -781,19 +691,8 @@ export default function Home() {
                                     href="https://www.bible.com/app"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="
-            group
-            bg-white/10
-            backdrop-blur-xl
-            border border-white/20
-            rounded-3xl
-            p-8
-            hover:bg-white/20
-            hover:-translate-y-2
-            transition-all
-            duration-300
-          "
-                                >
+                                    className="group bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 hover:bg-white/20
+                                     hover:-translate-y-2 transition-all duration-300">
                                     <Smartphone className="w-10 h-10 mb-5 text-white" />
 
                                     <h3 className="text-xl font-bold text-white mb-3">
@@ -814,19 +713,8 @@ export default function Home() {
                                 {/* MORE RESOURCES */}
                                 <div
                                     onClick={() => navigate("/resources")}
-                                    className="
-            group
-            cursor-pointer
-            bg-white/10
-            backdrop-blur-xl
-            border border-white/20
-            rounded-3xl
-            p-8
-            hover:bg-white/20
-            hover:-translate-y-2
-            transition-all
-            duration-300
-          "
+                                    className="group cursor-pointer bg-white/10 backdrop-blur-xl border border-white/20
+                                    rounded-3xl p-8 hover:bg-white/20 hover:-translate-y-2 transition-all duration-300"
                                 >
                                     <Library className="w-10 h-10 mb-5 text-white" />
 
@@ -851,16 +739,7 @@ export default function Home() {
                 </div>
 
                 <div className="py-24 px-4 sm:px-6 md:px-10">
-                    <div
-                        className="
-      max-w-7xl
-      mx-auto
-      overflow-hidden
-      rounded-[2rem]
-      bg-white
-      shadow-[0_20px_60px_rgba(0,0,0,0.12)]
-    "
-                    >
+                    <div className="max-w-7xl mx-auto overflow-hidden rounded-[2rem] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
                         <div className="grid lg:grid-cols-2">
 
                             {/* IMAGE */}
@@ -869,13 +748,7 @@ export default function Home() {
                                 <img
                                     src="https://res.cloudinary.com/dkwfi3iku/image/upload/f_auto,q_auto:best,w_2400/v1776697658/IMG_9252_jiufkn.jpg"
                                     alt="Spirit Filled Ministries Leadership"
-                                    className="
-            absolute
-            inset-0
-            h-full
-            w-full
-            object-cover
-          "
+                                    className="absolute inset-0 h-full w-full object-cover"
                                 />
 
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
@@ -909,24 +782,10 @@ export default function Home() {
 
                                     <button
                                         onClick={() => navigate("/about")}
-                                        className="
-              inline-flex
-              items-center
-              gap-3
-              rounded-full
-              bg-purple-600
-              text-white
-              px-6
-              py-3
-              font-semibold
-              transition-all
-              duration-300
-              hover:gap-5
-              hover:bg-purple-700
-            "
-                                    >
+                                        className="inline-flex items-center gap-3 rounded-full bg-purple-600 text-white
+                                        px-6 py-3 font-semibold transition-all duration-300] hover:gap-5 hover:bg-purple-700">
                                         Learn More
-                                        <ArrowRight className="w-4 h-4" />
+                                        <ArrowRight className="w-4 h-4"/>
                                     </button>
 
                                 </div>
@@ -937,10 +796,169 @@ export default function Home() {
                     </div>
                 </div>
 
+                {/* ================= WORSHIP WITH US ================= */}
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+
+                    <div className="max-w-6xl mx-auto text-center">
+
+                        <p className="uppercase tracking-[0.4em] text-purple-600 text-xs mb-4">
+                            Join Us
+                        </p>
+
+                        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                            Worship With Us
+                        </h2>
+
+                        <p className="text-gray-500 mb-12 max-w-2xl mx-auto">
+                            We would love to welcome you to one of our services.
+                        </p>
+
+                        <div className="grid md:grid-cols-4 gap-6">
+
+                            <div className="bg-white rounded-3xl p-8 shadow-lg">
+                                <h3 className="font-bold text-lg mb-3">Sunday Service</h3>
+                                <p className="text-purple-600 font-semibold">08:00 - 12:00</p>
+                            </div>
+
+                            <div className="bg-white rounded-3xl p-8 shadow-lg">
+                                <h3 className="font-bold text-lg mb-3">Monday Praise</h3>
+                                <p className="text-purple-600 font-semibold">18:00 - 19:00</p>
+                            </div>
+
+                            <div className="bg-white rounded-3xl p-8 shadow-lg">
+                                <h3 className="font-bold text-lg mb-3">Wednesday Service</h3>
+                                <p className="text-purple-600 font-semibold">18:00 - 19:00</p>
+                            </div>
+
+                            <div className="bg-white rounded-3xl p-8 shadow-lg">
+                                <h3 className="font-bold text-lg mb-3">Friday Prayer</h3>
+                                <p className="text-purple-600 font-semibold">18:00 - 19:00</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* ================= PRAYER REQUEST ================= */}
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+
+                    <div
+                        className="max-w-6xl mx-auto rounded-[2rem] bg-gradient-to-r from-purple-700 to-sky-600 text-white p-12 md:p-16 text-center">
+                        <p className="uppercase tracking-[0.4em] text-xs text-white/70 mb-4">
+                            Prayer
+                        </p>
+
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                            Need Prayer?
+                        </h2>
+
+                        <p className="max-w-2xl mx-auto text-white/80 mb-8">
+                            Whether you're believing for healing, breakthrough,
+                            restoration, or salvation, we would love to stand
+                            with you in prayer.
+                        </p>
+
+                        <button
+                            onClick={() => navigate("/contact")}
+                            className="bg-white text-purple-700 px-8 py-4 rounded-full font-semibold hover:scale-105 transition-all">
+                            Submit A Prayer Request
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {/* ================= MINISTRY FOCUS ================= */}
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+
+                    <div className="text-center max-w-3xl mx-auto mb-14">
+                        <p className="uppercase tracking-[0.4em] text-purple-600 text-xs mb-4">
+                            Our Mission
+                        </p>
+
+                        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                            What We Are Passionate About
+                        </h2>
+
+                        <p className="text-gray-600">
+                            Helping people encounter Jesus through worship, healing,
+                            deliverance, discipleship and biblical teaching.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
+
+                        <div className="group bg-white rounded-3xl p-8 shadow-lg text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300">
+                            <Shield className="w-12 h-12 mx-auto mb-4 text-purple-600 transition-all duration-300 group-hover:scale-110" />
+                            <h3 className="font-bold text-lg mb-2">Deliverance</h3>
+                            <p className="text-sm text-gray-500">
+                                Freedom through the power of Christ.
+                            </p>
+                        </div>
+
+                        <div className="group bg-white rounded-3xl p-8 shadow-lg text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300">
+                            <HeartHandshake className="w-12 h-12 mx-auto mb-4 text-purple-600 transition-all duration-300 group-hover:scale-110" />
+                            <h3 className="font-bold text-lg mb-2">Healing</h3>
+                            <p className="text-sm text-gray-500">
+                                Restoration of body, soul and spirit.
+                            </p>
+                        </div>
+
+                        <div className="group bg-white rounded-3xl p-8 shadow-lg text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300">
+                            <BookOpen className="w-12 h-12 mx-auto mb-4 text-purple-600 transition-all duration-300 group-hover:scale-110" />
+                            <h3 className="font-bold text-lg mb-2">Discipleship</h3>
+                            <p className="text-sm text-gray-500">
+                                Growing deeper in God's Word.
+                            </p>
+                        </div>
+
+                        <div className="group bg-white rounded-3xl p-8 shadow-lg text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300">
+                            <HandHelping className="w-12 h-12 mx-auto mb-4 text-purple-600 transition-all duration-300 group-hover:scale-110" />
+                            <h3 className="font-bold text-lg mb-2">Worship</h3>
+                            <p className="text-sm text-gray-500">
+                                Glorifying God together.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* ================= PLAN YOUR VISIT ================= */}
+                <div className="py-24 px-4 sm:px-6 md:px-10">
+
+                    <div
+                        className="max-w-6xl mx-auto rounded-[2rem] bg-gradient-to-r from-sky-600 to-purple-700 p-12 text-center text-white">
+
+                        <p className="uppercase tracking-[0.4em] text-xs text-white/70 mb-4">
+                            New Here?
+                        </p>
+
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                            We'd Love To Meet You
+                        </h2>
+
+                        <p className="max-w-2xl mx-auto text-white/80 mb-8">
+                            Whether you're visiting church for the first time or looking for
+                            a spiritual home, we welcome you to join us.
+                        </p>
+
+                        <button
+                            onClick={() => navigate("/location")}
+                            className="bg-white text-purple-700 rounded-full px-8 py-4 font-semibold">
+                            Plan Your Visit
+                        </button>
+
+                    </div>
+
+                </div>
+
                 {/* BLOG (UNCHANGED) */}
                 {posts.length > 0 && (
                     <>
-                        <div className="max-w-4xl mx-auto text-center py-20">
+                        <div className="max-w-4xl mx-auto text-center py-14">
 
                             <p className="text-3xl md:text-4xl font-light italic text-gray-700">
                                 “Where the Spirit of the Lord is,
