@@ -1,233 +1,377 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+const emptyForm = {
+    title: "",
+    description: "",
+    week_number: "",
+    year: new Date().getFullYear(),
+    start_date: "",
+    end_date: "",
+    is_active: false,
+};
+
 export default function QuizForm({
                                      editingQuiz,
                                      setEditingQuiz,
                                      refreshQuizzes,
                                  }) {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [weekNumber, setWeekNumber] = useState("");
-    const [year, setYear] = useState(new Date().getFullYear());
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [isActive, setIsActive] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState(emptyForm);
+    const [saving, setSaving] = useState(false);
+
+    /* ======================================================
+       LOAD EDITING QUIZ
+    ====================================================== */
 
     useEffect(() => {
         if (!editingQuiz) {
-            clearForm();
+            setForm(emptyForm);
             return;
         }
 
-        setTitle(editingQuiz.title || "");
-        setDescription(editingQuiz.description || "");
-        setWeekNumber(editingQuiz.week_number || "");
-        setYear(editingQuiz.year || new Date().getFullYear());
-        setStartDate(editingQuiz.start_date || "");
-        setEndDate(editingQuiz.end_date || "");
-        setIsActive(editingQuiz.is_active || false);
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
+        setForm({
+            title: editingQuiz.title || "",
+            description: editingQuiz.description || "",
+            week_number: editingQuiz.week_number ?? "",
+            year: editingQuiz.year ?? new Date().getFullYear(),
+            start_date: editingQuiz.start_date || "",
+            end_date: editingQuiz.end_date || "",
+            is_active: editingQuiz.is_active ?? false,
         });
-
     }, [editingQuiz]);
 
-    function clearForm() {
+    /* ======================================================
+       INPUT CHANGE
+    ====================================================== */
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+
+        setForm((previous) => ({
+            ...previous,
+            [name]: type === "checkbox" ? checked : value,
+        }));
+    };
+
+    /* ======================================================
+       RESET FORM
+    ====================================================== */
+
+    const resetForm = () => {
+        setForm(emptyForm);
         setEditingQuiz(null);
+    };
 
-        setTitle("");
-        setDescription("");
-        setWeekNumber("");
-        setYear(new Date().getFullYear());
-        setStartDate("");
-        setEndDate("");
-        setIsActive(false);
-    }
+    /* ======================================================
+       SAVE QUIZ
+    ====================================================== */
 
-    async function saveQuiz() {
-        if (!title || !startDate || !endDate) {
-            alert("Please complete all required fields.");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!form.title.trim()) {
+            alert("Please enter a quiz title.");
             return;
         }
 
-        setLoading(true);
-
-        const payload = {
-            title,
-            description,
-            week_number: weekNumber || null,
-            year,
-            start_date: startDate,
-            end_date: endDate,
-            is_active: isActive,
-        };
-
-        let error;
-
-        if (editingQuiz) {
-            ({ error } = await supabase
-                .from("bible_quizzes")
-                .update(payload)
-                .eq("id", editingQuiz.id));
-        } else {
-            ({ error } = await supabase
-                .from("bible_quizzes")
-                .insert(payload));
-        }
-
-        setLoading(false);
-
-        if (error) {
-            alert(error.message);
+        if (!form.start_date) {
+            alert("Please select a start date.");
             return;
         }
 
-        clearForm();
-        refreshQuizzes();
-    }
+        if (!form.end_date) {
+            alert("Please select an end date.");
+            return;
+        }
+
+        if (form.end_date < form.start_date) {
+            alert("End date cannot be before the start date.");
+            return;
+        }
+
+        setSaving(true);
+
+        try {
+            const quizData = {
+                title: form.title.trim(),
+                description: form.description.trim() || null,
+                week_number: form.week_number
+                    ? Number(form.week_number)
+                    : null,
+                year: form.year
+                    ? Number(form.year)
+                    : new Date().getFullYear(),
+                start_date: form.start_date,
+                end_date: form.end_date,
+                is_active: form.is_active,
+            };
+
+            /* ==================================================
+               UPDATE EXISTING QUIZ
+            ================================================== */
+
+            if (editingQuiz) {
+                const { error } = await supabase
+                    .from("bible_quizzes")
+                    .update(quizData)
+                    .eq("id", editingQuiz.id);
+
+                if (error) {
+                    throw error;
+                }
+
+                alert("✅ Quiz updated successfully.");
+            }
+
+            /* ==================================================
+               CREATE NEW QUIZ
+            ================================================== */
+
+            else {
+                const { error } = await supabase
+                    .from("bible_quizzes")
+                    .insert(quizData);
+
+                if (error) {
+                    throw error;
+                }
+
+                alert("✅ Quiz created successfully.");
+            }
+
+            resetForm();
+
+            await refreshQuizzes();
+        } catch (error) {
+            console.error("Quiz save error:", error);
+
+            alert(
+                error?.message ||
+                "Something went wrong while saving the quiz."
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    /* ======================================================
+       UI
+    ====================================================== */
 
     return (
-        <section className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+        <section className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8">
 
-            <div className="flex items-center justify-between mb-6">
+            {/* HEADER */}
 
-                <div>
+            <div className="mb-8">
 
-                    <h2 className="text-3xl font-bold">
-                        {editingQuiz ? "Edit Bible Quiz" : "Create Bible Quiz"}
-                    </h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-purple-500 font-semibold mb-2">
+                    {editingQuiz
+                        ? "Edit Scripture Challenge"
+                        : "Create Scripture Challenge"}
+                </p>
 
-                    <p className="text-gray-500 mt-1">
-                        {editingQuiz
-                            ? "Update the quiz information."
-                            : "Create a new weekly Bible quiz."}
-                    </p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {editingQuiz
+                        ? "Edit Bible Quiz"
+                        : "Create New Bible Quiz"}
+                </h2>
 
-                </div>
-
-                {editingQuiz && (
-                    <span className="bg-amber-100 text-amber-700 px-4 py-2 rounded-full text-sm font-semibold">
-                        Editing
-                    </span>
-                )}
+                <p className="text-gray-500 mt-2">
+                    {editingQuiz
+                        ? "Update the details of this Bible quiz."
+                        : "Set up a weekly Bible quiz before adding questions."}
+                </p>
 
             </div>
 
-            <div className="grid gap-5">
+            {/* FORM */}
 
-                <input
-                    className="border rounded-2xl p-4"
-                    placeholder="Quiz Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
+            <form
+                onSubmit={handleSubmit}
+                className="space-y-6"
+            >
 
-                <textarea
-                    rows={4}
-                    className="border rounded-2xl p-4"
-                    placeholder="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
+                {/* TITLE */}
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div>
+
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Quiz Title
+                    </label>
 
                     <input
-                        type="number"
-                        className="border rounded-2xl p-4"
-                        placeholder="Week Number"
-                        value={weekNumber}
-                        onChange={(e) => setWeekNumber(e.target.value)}
-                    />
-
-                    <input
-                        type="number"
-                        className="border rounded-2xl p-4"
-                        placeholder="Year"
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
+                        type="text"
+                        name="title"
+                        value={form.title}
+                        onChange={handleChange}
+                        placeholder="e.g. Bible Quiz — Week 1"
+                        className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
 
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                {/* DESCRIPTION */}
+
+                <div>
+
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Description
+                    </label>
+
+                    <textarea
+                        name="description"
+                        value={form.description}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Describe this week's Bible challenge..."
+                        className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    />
+
+                </div>
+
+                {/* WEEK / YEAR */}
+
+                <div className="grid sm:grid-cols-2 gap-5">
 
                     <div>
 
-                        <label className="block mb-2 text-sm text-gray-600">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Week Number
+                        </label>
+
+                        <input
+                            type="number"
+                            name="week_number"
+                            min="1"
+                            max="53"
+                            value={form.week_number}
+                            onChange={handleChange}
+                            placeholder="e.g. 1"
+                            className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+
+                    </div>
+
+                    <div>
+
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Year
+                        </label>
+
+                        <input
+                            type="number"
+                            name="year"
+                            min="2020"
+                            max="2100"
+                            value={form.year}
+                            onChange={handleChange}
+                            className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+
+                    </div>
+
+                </div>
+
+                {/* DATES */}
+
+                <div className="grid sm:grid-cols-2 gap-5">
+
+                    <div>
+
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Start Date
                         </label>
 
                         <input
                             type="date"
-                            className="w-full border rounded-2xl p-4"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
+                            name="start_date"
+                            value={form.start_date}
+                            onChange={handleChange}
+                            className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
 
                     </div>
 
                     <div>
 
-                        <label className="block mb-2 text-sm text-gray-600">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             End Date
                         </label>
 
                         <input
                             type="date"
-                            className="w-full border rounded-2xl p-4"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
+                            name="end_date"
+                            value={form.end_date}
+                            onChange={handleChange}
+                            className="w-full border border-gray-200 rounded-2xl px-4 py-4 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
 
                     </div>
 
                 </div>
 
-                <label className="flex items-center gap-3">
+                {/* ACTIVE */}
 
-                    <input
-                        type="checkbox"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                    />
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
-                    <span>Active Quiz</span>
+                    <label className="flex items-start gap-4 cursor-pointer">
 
-                </label>
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            checked={form.is_active}
+                            onChange={handleChange}
+                            className="mt-1 w-5 h-5 accent-purple-600"
+                        />
 
-                <div className="flex flex-wrap gap-4">
+                        <div>
+
+                            <p className="font-semibold text-gray-900">
+                                Make this quiz active
+                            </p>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                Active quizzes can be used as the current
+                                Bible challenge on the website.
+                            </p>
+
+                        </div>
+
+                    </label>
+
+                </div>
+
+                {/* ACTIONS */}
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
 
                     <button
-                        onClick={saveQuiz}
-                        disabled={loading}
-                        className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-semibold"
+                        type="submit"
+                        disabled={saving}
+                        className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-300 text-white rounded-2xl py-4 font-semibold transition"
                     >
-                        {loading
+                        {saving
                             ? "Saving..."
                             : editingQuiz
-                                ? "Update Quiz"
-                                : "Create Quiz"}
+                                ? "💾 Save Changes"
+                                : "➕ Create Quiz"}
                     </button>
 
                     {editingQuiz && (
-
                         <button
-                            onClick={clearForm}
-                            className="border border-gray-300 hover:bg-gray-100 px-8 py-4 rounded-2xl font-semibold"
+                            type="button"
+                            onClick={resetForm}
+                            disabled={saving}
+                            className="sm:w-40 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-2xl py-4 font-semibold transition"
                         >
                             Cancel
                         </button>
-
                     )}
 
                 </div>
 
-            </div>
+            </form>
 
         </section>
     );

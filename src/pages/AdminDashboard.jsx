@@ -1,5 +1,74 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import BibleQuizResults from "../admin/BibleQuizResults";
+import BibleQuizManager from "../admin/BibleQuizManager";
+
+
+/* ======================================================
+   BIBLE QUIZ ADMIN TABS
+====================================================== */
+
+function BibleQuizAdminTabs() {
+    const [activeTab, setActiveTab] = useState("management");
+
+    return (
+        <div className="space-y-6">
+
+            {/* ==================================================
+                TAB NAVIGATION
+            ================================================== */}
+
+            <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
+
+                <button
+                    type="button"
+                    onClick={() => setActiveTab("management")}
+                    className={`flex-1 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
+                        activeTab === "management"
+                            ? "bg-white text-purple-900 shadow-lg"
+                            : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                >
+                    📖 Quiz Management
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setActiveTab("results")}
+                    className={`flex-1 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
+                        activeTab === "results"
+                            ? "bg-white text-purple-900 shadow-lg"
+                            : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                >
+                    📊 Participant Results
+                </button>
+
+            </div>
+
+            {/* ==================================================
+                QUIZ MANAGEMENT
+            ================================================== */}
+
+            {activeTab === "management" && (
+                <div className="bg-gray-50 rounded-3xl p-4 sm:p-6">
+                    <BibleQuizManager />
+                </div>
+            )}
+
+            {/* ==================================================
+                PARTICIPANT RESULTS
+            ================================================== */}
+
+            {activeTab === "results" && (
+                <div className="bg-gray-50 rounded-3xl p-4 sm:p-6">
+                    <BibleQuizResults />
+                </div>
+            )}
+
+        </div>
+    );
+}
 
 /* ======================================================
    ADMIN DASHBOARD
@@ -478,6 +547,40 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </section>
+
+            {/* ========================
+    BIBLE QUIZ MANAGEMENT
+ ======================== */}
+
+            <section className="space-y-8">
+
+                {/* HEADER */}
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-purple-300 mb-2">
+                            Scripture Challenge
+                        </p>
+
+                        <h2 className="text-3xl font-bold text-white">
+                            Bible Quiz
+                        </h2>
+
+                        <p className="text-white/60 mt-2 max-w-2xl">
+                            Create quizzes, manage questions, review participant
+                            submissions, and monitor weekly Bible challenges.
+                        </p>
+                    </div>
+                </div>
+
+                {/* ========================
+        BIBLE QUIZ TABS
+    ======================== */}
+
+                <BibleQuizAdminTabs />
+
+            </section>
+
+
 
             {/* ========================
                MESSAGE OF THE DAY

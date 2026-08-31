@@ -19,10 +19,6 @@ export default function PostDetail() {
                 .eq("id", id)
                 .single();
 
-            console.log("Post ID:", id);
-            console.log("Post Data:", data);
-            console.log("Post Error:", error);
-
             if (error) {
                 setError(error.message);
                 setLoading(false);

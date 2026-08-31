@@ -118,7 +118,7 @@ export default function Navbar() {
                             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50">
                                 <div className="w-[1000px] max-w-[95vw] overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-100">
 
-                                    <div className="grid grid-cols-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
                                         <NavLink
                                             to="/sermons"
                                             className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
@@ -365,6 +365,42 @@ export default function Navbar() {
                                             </h3>
                                         </NavLink>
 
+                                        <NavLink
+                                            to="/bible-quiz"
+                                            className="group p-8 border-r border-gray-100 hover:bg-gray-50 transition-all duration-300"
+                                        >
+                                            <BookOpen
+                                                className="w-10 h-10 text-black mb-16 transition-transform duration-300 group-hover:-translate-y-1"
+                                            />
+
+                                            <div className="relative h-10 overflow-hidden mb-3">
+
+                                                <div
+                                                    className="absolute inset-0 text-xs uppercase tracking-[0.25em] text-gray-500
+            transition-all duration-300 group-hover:-translate-y-6 group-hover:opacity-0"
+                                                >
+                                                    Quiz
+                                                </div>
+
+                                                <div
+                                                    className="absolute inset-0 flex items-center gap-2 text-xs uppercase tracking-[0.25em]
+            font-semibold text-black translate-y-6 opacity-0 transition-all duration-300
+            group-hover:translate-y-0 group-hover:opacity-100"
+                                                >
+                                                    <span>Take Quiz</span>
+
+                                                    <ArrowRight
+                                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                                    />
+                                                </div>
+
+                                            </div>
+
+                                            <h3 className="text-xl font-semibold text-gray-900">
+                                                Bible Quiz
+                                            </h3>
+                                        </NavLink>
+
                                     </div>
                                 </div>
                             </div>
@@ -501,6 +537,7 @@ export default function Navbar() {
                             </div>
                         )}
                     </div>
+                    <NavLink className="text-sm" to="/bible-quiz" onClick={() => setOpen(false)}>Bible Quiz</NavLink>
                     <NavLink className="text-sm" to="/events" onClick={() => setOpen(false)}>Events</NavLink>
                     <NavLink className="text-sm" to="/location" onClick={() => setOpen(false)}>Visit</NavLink>
                     <NavLink className="text-sm" to="/about" onClick={() => setOpen(false)}>About</NavLink>

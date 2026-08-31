@@ -26,6 +26,8 @@ import Sermons from "./pages/Sermons";
 import Resources from "./pages/Resources.jsx";
 import Videos from "./pages/Videos.jsx";
 import Contact from "./pages/Contact.jsx";
+import BibleQuiz from "./pages/BibleQuiz";
+import BibleLeaderboard from "./pages/BibleLeaderboard.jsx";
 
 export default function App() {
     return (
@@ -59,10 +61,13 @@ export default function App() {
                                 <Route path="/teachings" element={<Videos />} />
                                 <Route path="/testimonies" element={<Videos />} />
                                 <Route path="/contact" element={<Contact />} />
+                                <Route path="/bible-quiz" element={<BibleQuiz />} />
 
                                 {/* ADMIN */}
                                 <Route path="/admin" element={<AdminLogin />} />
                                 <Route path="/reset-password" element={<ResetPassword />} />
+                                <Route path="/bible-quiz/leaderboard" element={<BibleLeaderboard />}
+                                />
                                 <Route
                                     path="/admin/dashboard"
                                     element={

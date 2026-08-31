@@ -3,6 +3,7 @@ export default function QuestionCard({
                                          onEdit,
                                          onDuplicate,
                                          onDelete,
+                                         deleting = false,
                                      }) {
     const difficultyColors = {
         Easy: "bg-green-100 text-green-700",
@@ -172,9 +173,14 @@ export default function QuestionCard({
 
                     <button
                         onClick={onDelete}
-                        className="bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-xl font-semibold transition"
+                        disabled={deleting}
+                        className={`px-5 py-3 rounded-xl font-semibold transition ${
+                            deleting
+                                ? "bg-gray-400 text-white cursor-not-allowed"
+                                : "bg-red-600 hover:bg-red-500 text-white"
+                        }`}
                     >
-                        🗑 Delete
+                        {deleting ? "⏳ Deleting..." : "🗑 Delete"}
                     </button>
 
                 </div>

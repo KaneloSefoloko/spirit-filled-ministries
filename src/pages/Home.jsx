@@ -4,7 +4,7 @@ import {supabase} from "../lib/supabaseClient";
 import {useNavigate} from "react-router-dom";
 import BlogSection from "../components/BlogSection";
 import {CalendarDays, Clock3, PlayCircle, MapPin, ArrowRight, BookOpen,
-Smartphone, HandHelping, Library, HeartHandshake, Shield} from "lucide-react";
+Smartphone, HandHelping, Library, HeartHandshake, Shield, Trophy} from "lucide-react";
 
 /* ========================
    CACHE
@@ -230,7 +230,7 @@ export default function Home() {
         <div className="overflow-x-hidden">
 
             {/* ================= HERO ================= */}
-            <div className="relative h-[85vh] overflow-hidden mb-12 md:mb-16 rounded-b-[2rem]">
+            <div className="relative min-h-[620px] h-[85svh] max-h-[900px] overflow-hidden mb-12 md:mb-16 rounded-b-[2rem]">
 
                 {/* SLIDES */}
                 {heroSlides.map((slide, i) => (
@@ -247,7 +247,7 @@ export default function Home() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
 
                         {/* CONTENT */}
-                        <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-12 text-white">
+                        <div className="relative z-10 h-full flex flex-col justify-end px-5 pb-16 sm:px-8 sm:pb-20 md:p-12 text-white">
 
                             <h1 className="text-[clamp(1.8rem,5vw,3.5rem)] font-bold leading-tight">
                                 {slide.title}
@@ -257,9 +257,9 @@ export default function Home() {
                                 {slide.subtitle}
                             </p>
 
-                            <div className="flex justify-center md:justify-start gap-4 mt-6">
+                            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
 
-                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-4">
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 sm:px-5 sm:py-4">
                                     <div className="text-2xl font-bold">
                                         {upcomingActivities.length}
                                     </div>
@@ -269,7 +269,7 @@ export default function Home() {
                                     </div>
                                 </div>
 
-                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-4">
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 sm:px-5 sm:py-4">
                                     <div className="text-2xl font-bold">
                                         {posts.length}
                                     </div>
@@ -308,7 +308,7 @@ export default function Home() {
 
                                 <button
                                     onClick={handleWatchLive}
-                                    className={`px-6 py-3 rounded-full font-semibold ${
+                                    className={`w-full sm:w-auto px-6 py-3 rounded-full font-semibold ${
                                         isLive
                                             ? "bg-red-600 animate-pulse"
                                             : "bg-gray-500"
@@ -423,7 +423,7 @@ export default function Home() {
                     <div className="mb-16 px-4">
                         <div
                             className="relative max-w-5xl mx-auto overflow-hidden rounded-[2rem] bg-white/70
-                            backdrop-blur-xl border border-white/30 shadow-xl p-10 md:p-14 text-center"
+                            backdrop-blur-xl border border-white/30 shadow-xl p-6 sm:p-8 md:p-14 text-center"
                         >
                             {/* Decorative gradient blobs */}
                             <div
@@ -502,7 +502,7 @@ export default function Home() {
                                 return (
                                     <div
                                         onClick={() => navigate(`/events/${a.id}`)}
-                                        className={`group relative min-h-[550px] overflow-hidden
+                                        className={`group relative min-h-[420px] sm:min-h-[500px] lg:min-h-[550px] overflow-hidden
                                          rounded-[2rem] cursor-pointer shadow-[0_20px_60px_rgba(0,0,0,0.25)] hover:scale-[1.01] hover:-translate-y-1 transition-all duration-500
                                           ${cardAnim()}
                                           `}
@@ -529,7 +529,7 @@ export default function Home() {
                                             </div>
                                         )}
 
-                                        <div className="relative z-10 flex h-full flex-col justify-end p-10 md:p-14 text-white">
+                                        <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8 md:p-14 text-white">
 
                                             <div
                                                 className=" inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur- mb-6"
@@ -541,7 +541,7 @@ export default function Home() {
                                                 {status}
                                             </div>
 
-                                            <h3 className="text-3xl md:text-5xl font-bold leading-tight max-w-4xl">
+                                            <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight max-w-4xl">
                                                 {a.title}
                                             </h3>
 
@@ -738,6 +738,195 @@ export default function Home() {
                     </div>
                 </div>
 
+                {/* ================= BIBLE QUIZ ================= */}
+                <div className="py-20 sm:py-24 px-4 sm:px-6 md:px-10">
+
+                    <div
+                        className="relative max-w-7xl mx-auto overflow-hidden rounded-[2rem]
+        bg-gradient-to-br from-purple-800 via-purple-700 to-sky-600
+        shadow-[0_25px_80px_rgba(0,0,0,0.20)]"
+                    >
+
+                        {/* BACKGROUND GLOW */}
+                        <div
+                            className="absolute -top-32 -right-32
+            w-80 h-80 sm:w-96 sm:h-96
+            rounded-full bg-white/10 blur-3xl"
+                        />
+
+                        <div
+                            className="absolute -bottom-32 -left-32
+            w-80 h-80 sm:w-96 sm:h-96
+            rounded-full bg-sky-300/10 blur-3xl"
+                        />
+
+                        {/* CONTENT */}
+                        <div className="relative z-10 grid lg:grid-cols-[1.2fr_0.8fr] gap-10 lg:gap-16
+        items-center p-7 sm:p-10 md:p-14 lg:p-16">
+
+                            {/* LEFT */}
+                            <div>
+
+                                <div className="inline-flex items-center gap-2
+                px-4 py-2 rounded-full
+                bg-white/10 border border-white/20
+                backdrop-blur-md text-white/90
+                text-xs uppercase tracking-[0.3em] mb-6">
+
+                                    <BookOpen className="w-4 h-4" />
+
+                                    Grow In The Word
+                                </div>
+
+                                <h2 className="text-4xl sm:text-5xl md:text-6xl
+                font-bold text-white leading-[1.05] mb-6">
+
+                                    Test Your Knowledge.
+                                    <span className="block text-white/70">
+                        Grow In Scripture.
+                    </span>
+
+                                </h2>
+
+                                <p className="max-w-2xl text-white/80
+                text-base sm:text-lg leading-relaxed mb-8">
+
+                                    Put your knowledge of God's Word to the test.
+                                    Take our weekly Bible Quiz, learn as you go,
+                                    and see how you rank among the community.
+
+                                </p>
+
+                                {/* BUTTONS */}
+                                <div className="flex flex-col sm:flex-row gap-3">
+
+                                    <button
+                                        onClick={() => navigate("/bible-quiz")}
+                                        className="group inline-flex items-center justify-center
+                        gap-3 rounded-full bg-white text-purple-700
+                        px-7 py-3.5 font-semibold
+                        hover:gap-5 hover:bg-gray-100
+                        transition-all duration-300"
+                                    >
+                                        Take The Quiz
+
+                                        <ArrowRight
+                                            className="w-4 h-4 transition-transform
+                            group-hover:translate-x-1"
+                                        />
+                                    </button>
+
+                                    <button
+                                        onClick={() => navigate("/bible-quiz/leaderboard")}
+                                        className="group inline-flex items-center justify-center
+                        gap-3 rounded-full
+                        border border-white/30
+                        bg-white/10 backdrop-blur-md
+                        text-white px-7 py-3.5 font-semibold
+                        hover:bg-white/20
+                        hover:gap-5
+                        transition-all duration-300"
+                                    >
+                                        <Trophy className="w-4 h-4" />
+
+                                        View Leaderboard
+
+                                        <ArrowRight
+                                            className="w-4 h-4 transition-transform
+                            group-hover:translate-x-1"
+                                        />
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            {/* RIGHT — FEATURE CARD */}
+                            <div className="relative">
+
+                                <div
+                                    className="relative overflow-hidden
+                    rounded-[2rem]
+                    bg-white/10
+                    border border-white/20
+                    backdrop-blur-xl
+                    p-7 sm:p-8 md:p-10"
+                                >
+
+                                    {/* ICON */}
+                                    <div
+                                        className="w-16 h-16 sm:w-20 sm:h-20
+                        rounded-2xl
+                        bg-white
+                        flex items-center justify-center
+                        shadow-xl mb-7"
+                                    >
+                                        <Trophy
+                                            className="w-8 h-8 sm:w-10 sm:h-10 text-purple-700"
+                                        />
+                                    </div>
+
+                                    <p className="text-xs uppercase
+                    tracking-[0.35em] text-white/60 mb-3">
+                                        Weekly Challenge
+                                    </p>
+
+                                    <h3 className="text-2xl sm:text-3xl
+                    font-bold text-white mb-4">
+                                        How Well Do You Know The Bible?
+                                    </h3>
+
+                                    <p className="text-white/70 text-sm sm:text-base
+                    leading-relaxed mb-7">
+                                        Challenge yourself with Scripture-based questions
+                                        and compete for a place on the leaderboard.
+                                    </p>
+
+                                    {/* MINI STATS */}
+                                    <div className="grid grid-cols-2 gap-3">
+
+                                        <div
+                                            className="rounded-2xl
+                            bg-black/10
+                            border border-white/10
+                            p-4"
+                                        >
+                                            <div className="text-white font-bold text-xl">
+                                                Weekly
+                                            </div>
+
+                                            <div className="text-white/60 text-xs uppercase
+                            tracking-wider mt-1">
+                                                New Challenge
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className="rounded-2xl
+                            bg-black/10
+                            border border-white/10
+                            p-4"
+                                        >
+                                            <div className="text-white font-bold text-xl">
+                                                Compete
+                                            </div>
+
+                                            <div className="text-white/60 text-xs uppercase
+                            tracking-wider mt-1">
+                                                Community Ranking
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
                 <div className="py-24 px-4 sm:px-6 md:px-10">
                     <div className="max-w-7xl mx-auto overflow-hidden rounded-[2rem] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
                         <div className="grid lg:grid-cols-2">
@@ -783,7 +972,7 @@ export default function Home() {
                                     <button
                                         onClick={() => navigate("/about")}
                                         className="inline-flex items-center gap-3 rounded-full bg-purple-600 text-white
-                                        px-6 py-3 font-semibold transition-all duration-300] hover:gap-5 hover:bg-purple-700">
+                                        px-6 py-3 font-semibold transition-all duration-300 hover:gap-5 hover:bg-purple-700">
                                         Learn More
                                         <ArrowRight className="w-4 h-4"/>
                                     </button>

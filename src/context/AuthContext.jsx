@@ -1,29 +1,90 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+} from "react";
+
+import { supabase } from "../lib/supabaseClient";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [isAdmin, setIsAdmin] = useState(() => {
-        return localStorage.getItem("isAdmin") === "true";
-    });
+    const [session, setSession] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
 
-    const login = (password) => {
-        // SIMPLE DEMO PASSWORD (replace later with real auth)
-        if (password === "admin123") {
-            setIsAdmin(true);
-            localStorage.setItem("isAdmin", "true");
-            return true;
+    useEffect(() => {
+        let mounted = true;
+
+        async function loadSession() {
+            const {
+                data,
+                error,
+            } = await supabase.auth.getSession();
+
+            if (error) {
+                console.error(
+                    "❌ AuthContext session error:",
+                    error
+                );
+            }
+
+            if (!mounted) return;
+
+            const currentSession = data?.session ?? null;
+
+            setSession(currentSession);
+
+            setLoading(false);
         }
-        return false;
-    };
 
-    const logout = () => {
+        loadSession();
+
+        const {
+            data: {
+                subscription,
+            },
+        } = supabase.auth.onAuthStateChange(
+            (_event, newSession) => {
+
+                setSession(newSession);
+
+                setLoading(false);
+            }
+        );
+
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
+    }, []);
+
+    const logout = async () => {
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            console.error(
+                "❌ Logout error:",
+                error
+            );
+            return;
+        }
+
+        setSession(null);
         setIsAdmin(false);
-        localStorage.removeItem("isAdmin");
     };
 
     return (
-        <AuthContext.Provider value={{ isAdmin, login, logout }}>
+        <AuthContext.Provider
+            value={{
+                session,
+                user: session?.user ?? null,
+                isAdmin,
+                loading,
+                logout,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
