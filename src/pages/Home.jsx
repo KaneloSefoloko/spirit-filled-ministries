@@ -257,30 +257,6 @@ export default function Home() {
                                 {slide.subtitle}
                             </p>
 
-                            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
-
-                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 sm:px-5 sm:py-4">
-                                    <div className="text-2xl font-bold">
-                                        {upcomingActivities.length}
-                                    </div>
-
-                                    <div className="text-white/70 text-xs uppercase">
-                                        Events
-                                    </div>
-                                </div>
-
-                                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 sm:px-5 sm:py-4">
-                                    <div className="text-2xl font-bold">
-                                        {posts.length}
-                                    </div>
-
-                                    <div className="text-white/70 text-xs uppercase">
-                                        Articles
-                                    </div>
-                                </div>
-
-                            </div>
-
                             {/* BUTTONS */}
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
                                 {isLive && (
@@ -447,27 +423,25 @@ export default function Home() {
                 )}
 
                 {/* ================= EVENTS (NEW CARD STYLE ONLY) ================= */}
-                <div className="px-4 sm:px-6 md:px-10">
-                    <div className="flex justify-between items-end mb-8">
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end mb-8">
 
-                        <div>
-                            <p className="uppercase tracking-[0.35em] text-purple-600 text-xs mb-2">
-                                Calendar
-                            </p>
+                    <div>
+                        <p className="uppercase tracking-[0.35em] text-purple-600 text-xs mb-2">
+                            Calendar
+                        </p>
 
-                            <h2 className="text-3xl font-bold">
-                                Upcoming Events
-                            </h2>
-                        </div>
-
-                        <button
-                            onClick={() => navigate("/events")}
-                            className="text-purple-600 font-semibold"
-                        >
-                            View All →
-                        </button>
-
+                        <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
+                            Upcoming Events
+                        </h2>
                     </div>
+
+                    <button
+                        onClick={() => navigate("/events")}
+                        className="text-purple-600 font-semibold self-start sm:self-auto"
+                    >
+                        View All →
+                    </button>
+
                 </div>
 
                 <div className="max-w-7xl mx-auto">
@@ -560,8 +534,8 @@ export default function Home() {
                                             </div>
 
                                             <div
-                                                className="mt-10 inline-flex items-center gap-3 bg-white text-black rounded-full px-6 py-3
-                                                font-semibold transition-all duration-30 group-hover:gap-5 w-fit"
+                                                className="mt-8 inline-flex flex-wrap items-center gap-2 bg-white text-black
+                                                 rounded-full px-5 py-3 font-semibold w-fit max-w-full"
                                             >
                                                 View Event
                                                 <ArrowRight className="w-4 h-4" />
@@ -886,33 +860,25 @@ export default function Home() {
                                     <div className="grid grid-cols-2 gap-3">
 
                                         <div
-                                            className="rounded-2xl
-                            bg-black/10
-                            border border-white/10
-                            p-4"
+                                            className="rounded-2xl bg-black/10  border border-white/10 p-3 sm:p-4"
                                         >
-                                            <div className="text-white font-bold text-xl">
+                                            <div className="text-lg sm:text-xl font-bold text-white">
                                                 Weekly
                                             </div>
 
-                                            <div className="text-white/60 text-xs uppercase
-                            tracking-wider mt-1">
+                                            <div className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1">
                                                 New Challenge
                                             </div>
                                         </div>
 
                                         <div
-                                            className="rounded-2xl
-                            bg-black/10
-                            border border-white/10
-                            p-4"
+                                            className="rounded-2xl bg-black/10 border border-white/10 p-3"
                                         >
-                                            <div className="text-white font-bold text-xl">
+                                            <div className="text-white font-bold text-lg sm:text-xl ">
                                                 Compete
                                             </div>
 
-                                            <div className="text-white/60 text-xs uppercase
-                            tracking-wider mt-1">
+                                            <div className="text-white/60 text-xs uppercase tracking-wider mt-1">
                                                 Community Ranking
                                             </div>
                                         </div>

@@ -27,13 +27,14 @@ const createEmptyAnswers = () => [
 ];
 
 export default function QuestionForm({
-                                         quiz,
-                                         editingQuestion,
-                                         refreshQuestions,
-                                         setEditingQuestion,
-                                         onCancel,
-                                     }) {
+    quiz,
+    editingQuestion,
+    refreshQuestions,
+    setEditingQuestion,
+    onCancel,
+}) {
     const { session, loading: authLoading } = useAuth();
+
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
 
@@ -47,7 +48,11 @@ export default function QuestionForm({
     const [correctAnswer, setCorrectAnswer] = useState("A");
 
 
-    function resetForm() {
+    /* ======================================================
+       RESET FORM
+    ====================================================== */
+
+    const resetForm = () => {
         setQuestion("");
         setBibleReference("");
         setDifficulty("Easy");
@@ -58,185 +63,362 @@ export default function QuestionForm({
         setAnswers(createEmptyAnswers());
 
         setCorrectAnswer("A");
-    }
+        setSuccessMessage("");
+    };
+
+
+    /* ======================================================
+       LOAD QUESTION FOR EDITING
+    ====================================================== */
 
     useEffect(() => {
-
         if (!editingQuestion) {
             resetForm();
             return;
         }
 
         setQuestion(editingQuestion.question ?? "");
-        setBibleReference(editingQuestion.bible_reference ?? "");
-        setDifficulty(editingQuestion.difficulty ?? "Easy");
-        setPoints(editingQuestion.points ?? 1);
-        setImageUrl(editingQuestion.image_url ?? "");
-        setExplanation(editingQuestion.explanation ?? "");
 
-        const sortedAnswers = [
+        setBibleReference(
+            editingQuestion.bible_reference ?? ""
+        );
+
+        setDifficulty(
+            editingQuestion.difficulty ?? "Easy"
+        );
+
+        setPoints(
+            editingQuestion.points ?? 1
+        );
+
+        setImageUrl(
+            editingQuestion.image_url ?? ""
+        );
+
+        setExplanation(
+            editingQuestion.explanation ?? ""
+        );
+
+
+        /*
+         * Always create exactly four answer slots.
+         *
+         * This protects the form if Supabase returns
+         * fewer than four answers.
+         */
+
+        const existingAnswers = [
             ...(editingQuestion.bible_quiz_answers ?? []),
         ].sort(
             (a, b) =>
-                a.display_order - b.display_order
+                (a.display_order ?? 0) -
+                (b.display_order ?? 0)
         );
 
-        if (sortedAnswers.length) {
 
-            setAnswers(
-                sortedAnswers.map(answer => ({
-                    id: answer.id,
-                    option_letter: answer.option_letter,
-                    answer: answer.answer,
-                    display_order: answer.display_order,
-                }))
-            );
+        const normalizedAnswers = ["A", "B", "C", "D"].map(
+            (letter, index) => {
 
-            const correct = sortedAnswers.find(
-                answer => answer.is_correct
-            );
+                const existing = existingAnswers.find(
+                    (answer) =>
+                        answer.option_letter === letter
+                );
 
-            setCorrectAnswer(
-                correct?.option_letter ?? "A"
-            );
-        }
+                return {
+                    id: existing?.id,
+                    option_letter: letter,
+                    answer: existing?.answer ?? "",
+                    display_order:
+                        existing?.display_order ?? index + 1,
+                };
+            }
+        );
+
+
+        setAnswers(normalizedAnswers);
+
+
+        const correct = existingAnswers.find(
+            (answer) => answer.is_correct
+        );
+
+        setCorrectAnswer(
+            correct?.option_letter ?? "A"
+        );
 
     }, [editingQuestion]);
 
-    async function createQuestion() {
-        try {
-            setLoading(true);
-            setSuccessMessage("");
 
-            if (!quiz?.id) {
-                throw new Error("No quiz was selected.");
-            }
+    /* ======================================================
+       CREATE QUESTION
+    ====================================================== */
 
-            if (authLoading) {
-                throw new Error("Authentication is still loading. Please wait and try again.");
-            }
+    const createQuestion = async () => {
+        if (!quiz?.id) {
+            throw new Error("No quiz was selected.");
+        }
 
-            if (!session?.user) {
-                throw new Error("No active session found. Please log in again.");
-            }
+        const questionData = {
+            quiz_id: quiz.id,
+            question: question.trim(),
+            bible_reference:
+                bibleReference.trim() || null,
+            difficulty,
+            points: Number(points) || 1,
+            image_url:
+                imageUrl.trim() || null,
+            explanation:
+                explanation.trim() || null,
+        };
 
-            const questionData = {
-                quiz_id: quiz.id,
+
+        /*
+         * Create question first.
+         */
+
+        const {
+            data: createdQuestion,
+            error: questionError,
+        } = await supabase
+            .from("bible_quiz_questions")
+            .insert(questionData)
+            .select()
+            .single();
+
+        if (questionError) {
+            throw questionError;
+        }
+
+
+        /*
+         * Create all four answers.
+         */
+
+        const answerRows = answers.map((answer, index) => ({
+            question_id: createdQuestion.id,
+            option_letter: answer.option_letter,
+            answer: answer.answer.trim(),
+            display_order:
+                answer.display_order ?? index + 1,
+            is_correct:
+                answer.option_letter === correctAnswer,
+        }));
+
+
+        const {
+            error: answerError,
+        } = await supabase
+            .from("bible_quiz_answers")
+            .insert(answerRows);
+
+
+        /*
+         * If answer creation fails, remove the question
+         * so we don't leave an orphaned question.
+         */
+
+        if (answerError) {
+
+            await supabase
+                .from("bible_quiz_questions")
+                .delete()
+                .eq("id", createdQuestion.id);
+
+            throw answerError;
+        }
+
+        return createdQuestion;
+    };
+
+
+    /* ======================================================
+       UPDATE QUESTION
+    ====================================================== */
+
+    const updateQuestion = async () => {
+
+        if (!editingQuestion?.id) {
+            throw new Error(
+                "No question selected for editing."
+            );
+        }
+
+
+        /*
+         * Update question itself.
+         */
+
+        const {
+            error: questionError,
+        } = await supabase
+            .from("bible_quiz_questions")
+            .update({
                 question: question.trim(),
-                bible_reference: bibleReference.trim() || null,
+                bible_reference:
+                    bibleReference.trim() || null,
                 difficulty,
                 points: Number(points) || 1,
-                image_url: imageUrl.trim() || null,
-                explanation: explanation.trim() || null,
-            };
+                image_url:
+                    imageUrl.trim() || null,
+                explanation:
+                    explanation.trim() || null,
+            })
+            .eq("id", editingQuestion.id);
+
+
+        if (questionError) {
+            throw questionError;
+        }
+
+
+        /*
+         * Make sure the database contains exactly
+         * the four answer options A, B, C and D.
+         *
+         * We update existing answers and insert missing ones.
+         */
+
+        const existingAnswerIds = answers
+            .filter((answer) => answer.id)
+            .map((answer) => answer.id);
+
+
+        /*
+         * Remove stale answer rows that no longer belong
+         * to the four options being edited.
+         */
+
+        if (existingAnswerIds.length > 0) {
 
             const {
-                data: createdQuestion,
-                error: questionError,
+                error: deleteError,
             } = await supabase
-                .from("bible_quiz_questions")
-                .insert(questionData)
-                .select()
-                .single();
+                .from("bible_quiz_answers")
+                .delete()
+                .eq("question_id", editingQuestion.id)
+                .not(
+                    "id",
+                    "in",
+                    `(${existingAnswerIds.join(",")})`
+                );
 
-            if (questionError) {
-                throw questionError;
+            if (deleteError) {
+                throw deleteError;
             }
 
-            const answerRows = answers.map((answer) => ({
-                question_id: createdQuestion.id,
-                option_letter: answer.option_letter,
-                answer: answer.answer.trim(),
-                display_order: answer.display_order,
-                is_correct:
-                    answer.option_letter === correctAnswer,
-            }));
+        } else {
 
-            const { error: answerError } = await supabase
+            /*
+             * No existing answer IDs means all answer rows
+             * need to be rebuilt.
+             */
+
+            const {
+                error: deleteAllError,
+            } = await supabase
                 .from("bible_quiz_answers")
-                .insert(answerRows);
+                .delete()
+                .eq("question_id", editingQuestion.id);
+
+            if (deleteAllError) {
+                throw deleteAllError;
+            }
+        }
+
+
+        /*
+         * Update existing answers.
+         */
+
+        for (const answer of answers) {
+
+            if (!answer.id) {
+                continue;
+            }
+
+            const {
+                error: answerError,
+            } = await supabase
+                .from("bible_quiz_answers")
+                .update({
+                    option_letter:
+                        answer.option_letter,
+
+                    answer:
+                        answer.answer.trim(),
+
+                    display_order:
+                        answer.display_order,
+
+                    is_correct:
+                        answer.option_letter ===
+                        correctAnswer,
+                })
+                .eq("id", answer.id)
+                .eq(
+                    "question_id",
+                    editingQuestion.id
+                );
 
             if (answerError) {
-                await supabase
-                    .from("bible_quiz_questions")
-                    .delete()
-                    .eq("id", createdQuestion.id);
-
                 throw answerError;
             }
-
-            await refreshQuestions();
-
-            resetForm();
-
-            setSuccessMessage("Question created successfully!");
-
-            setTimeout(() => {
-                setSuccessMessage("");
-            }, 4000);
-
-        } catch (error) {
-            console.error(error);
-
-            alert(
-                `Unable to save question:\n\n${
-                    error?.message || "Unknown error"
-                }`
-            );
-        } finally {
-            setLoading(false);
         }
-    }
 
-    async function updateQuestion() {
-        try {
-            setLoading(true);
 
-            const { error } = await supabase
-                .from("bible_quiz_questions")
-                .update({
-                    question,
-                    bible_reference: bibleReference,
-                    difficulty,
-                    points,
-                    image_url: imageUrl,
-                    explanation,
-                })
-                .eq("id", editingQuestion.id);
+        /*
+         * Insert answers that were missing.
+         */
 
-            if (error) throw error;
+        const newAnswers = answers
+            .filter((answer) => !answer.id)
+            .map((answer) => ({
+                question_id:
+                    editingQuestion.id,
 
-            // Update each answer individually
-            for (const answer of answers) {
+                option_letter:
+                    answer.option_letter,
 
-                const { error: answerError } = await supabase
-                    .from("bible_quiz_answers")
-                    .update({
-                        answer: answer.answer,
-                        is_correct:
-                            answer.option_letter === correctAnswer,
-                    })
-                    .eq("id", answer.id);
+                answer:
+                    answer.answer.trim(),
 
-                if (answerError) throw answerError;
+                display_order:
+                    answer.display_order,
+
+                is_correct:
+                    answer.option_letter ===
+                    correctAnswer,
+            }));
+
+
+        if (newAnswers.length > 0) {
+
+            const {
+                error: insertError,
+            } = await supabase
+                .from("bible_quiz_answers")
+                .insert(newAnswers);
+
+            if (insertError) {
+                throw insertError;
             }
-
-            resetForm();
-
-            setEditingQuestion(null);
-
-            await refreshQuestions();
-
-        } catch (error) {
-            console.error(error);
-            alert(error.message);
-        } finally {
-            setLoading(false);
         }
-    }
+    };
 
-    async function handleSubmit(e) {
+
+    /* ======================================================
+       SUBMIT
+    ====================================================== */
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        setSuccessMessage("");
+
+
+        /* ==================================================
+           BASIC VALIDATION
+        ================================================== */
 
         if (!question.trim()) {
             alert("Please enter a question.");
@@ -248,53 +430,207 @@ export default function QuestionForm({
             return;
         }
 
-        if (answers.some(answer => !answer.answer.trim())) {
-            alert("Please complete all four answer options.");
+
+        /*
+         * Make absolutely sure we have A-D.
+         */
+
+        const requiredLetters = ["A", "B", "C", "D"];
+
+        const hasAllLetters =
+            requiredLetters.every((letter) =>
+                answers.some(
+                    (answer) =>
+                        answer.option_letter === letter
+                )
+            );
+
+        if (!hasAllLetters) {
+            alert(
+                "Please make sure all four answer options A, B, C and D are present."
+            );
             return;
         }
 
-        const correctExists = answers.some(
-            answer => answer.option_letter === correctAnswer
+
+        /*
+         * Make sure every answer has text.
+         */
+
+        if (
+            answers.some(
+                (answer) =>
+                    !answer.answer?.trim()
+            )
+        ) {
+            alert(
+                "Please complete all four answer options."
+            );
+            return;
+        }
+
+
+        /*
+         * Make sure exactly one correct answer exists.
+         */
+
+        const correctAnswers = answers.filter(
+            (answer) =>
+                answer.option_letter ===
+                correctAnswer
         );
 
-        if (!correctExists) {
-            alert("Please choose the correct answer.");
+        if (correctAnswers.length !== 1) {
+            alert(
+                "Please choose exactly one correct answer."
+            );
             return;
         }
 
-        if (editingQuestion) {
-            await updateQuestion();
-        } else {
-            await createQuestion();
+
+        /*
+         * Authentication check is only needed when
+         * creating/updating through protected admin UI.
+         */
+
+        if (authLoading) {
+            alert(
+                "Authentication is still loading. Please wait a moment and try again."
+            );
+            return;
         }
-    }
+
+        if (!session?.user) {
+            alert(
+                "No active session found. Please log in again."
+            );
+            return;
+        }
+
+
+        setLoading(true);
+
+        try {
+
+            if (editingQuestion) {
+
+                await updateQuestion();
+
+                setSuccessMessage(
+                    "Question updated successfully!"
+                );
+
+            } else {
+
+                await createQuestion();
+
+                setSuccessMessage(
+                    "Question created successfully!"
+                );
+            }
+
+
+            /*
+             * Refresh first so the UI reflects exactly
+             * what is now in Supabase.
+             */
+
+            await refreshQuestions();
+
+
+            /*
+             * Reset after successful save.
+             */
+
+            resetForm();
+
+            if (editingQuestion) {
+                setEditingQuestion(null);
+            }
+
+
+            setTimeout(() => {
+                setSuccessMessage("");
+            }, 4000);
+
+        } catch (error) {
+
+            console.error(
+                "Question save error:",
+                error
+            );
+
+            alert(
+                `Unable to save question:\n\n${
+    error?.message ||
+    "Unknown error"
+}`
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+
+    /* ======================================================
+       UI
+    ====================================================== */
 
     return (
         <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-3xl shadow-lg border p-8 space-y-8"
+            className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6 sm:p-8 space-y-8"
         >
+
+            {/* ==================================================
+                SUCCESS MESSAGE
+            ================================================== */}
+
             {successMessage && (
+
                 <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-green-700">
+
                     <div className="flex items-center gap-3">
-                        <span className="text-xl">✓</span>
+
+                        <span className="text-xl">
+                            ✓
+                        </span>
 
                         <div>
+
                             <p className="font-semibold">
                                 {successMessage}
                             </p>
 
                             <p className="text-sm text-green-600 mt-1">
-                                The question and all four answers have been saved.
+                                The question and all four answers
+                                have been saved.
                             </p>
+
                         </div>
+
                     </div>
+
                 </div>
+
             )}
 
-            <div className="border-b pb-6">
 
-                <h2 className="text-3xl font-bold">
+            {/* ==================================================
+                HEADER
+            ================================================== */}
+
+            <div className="border-b border-gray-200 pb-6">
+
+                <p className="text-xs uppercase tracking-[0.3em] text-purple-500 font-semibold mb-2">
+                    {editingQuestion
+                        ? "Edit Scripture Question"
+                        : "Create Scripture Question"}
+                </p>
+
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
 
                     {editingQuestion
                         ? "Edit Bible Question"
@@ -304,74 +640,108 @@ export default function QuestionForm({
 
                 <p className="text-gray-500 mt-2">
 
-                    Build engaging Bible quiz questions for your congregation.
+                    {editingQuestion
+                        ? "Update the question, answers, and supporting Scripture information."
+                        : "Build engaging Bible quiz questions for your congregation."}
 
                 </p>
 
             </div>
 
+
+            {/* ==================================================
+                QUESTION
+            ================================================== */}
+
             <div className="space-y-5">
 
                 <div>
 
-                    <label className="block mb-2 font-medium">
+                    <label className="block mb-2 font-semibold text-gray-700">
                         Question *
                     </label>
 
                     <textarea
                         rows={4}
                         value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
+                        onChange={(e) =>
+                            setQuestion(e.target.value)
+                        }
                         placeholder="Example: Who built the ark according to Genesis?"
-                        className="w-full border rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                        className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none resize-none"
                     />
 
                 </div>
+
+
+                {/* ==================================================
+                    REFERENCE / DIFFICULTY
+                ================================================== */}
 
                 <div className="grid md:grid-cols-2 gap-5">
 
                     <div>
 
-                        <label className="block mb-2 font-medium">
-                            Bible Reference
+                        <label className="block mb-2 font-semibold text-gray-700">
+                            Bible Reference *
                         </label>
 
                         <input
                             value={bibleReference}
-                            onChange={(e) => setBibleReference(e.target.value)}
+                            onChange={(e) =>
+                                setBibleReference(
+                                    e.target.value
+                                )
+                            }
                             placeholder="Genesis 6:14"
-                            className="w-full border rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                            className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                         />
 
                     </div>
 
+
                     <div>
 
-                        <label className="block mb-2 font-medium">
+                        <label className="block mb-2 font-semibold text-gray-700">
                             Difficulty
                         </label>
 
                         <select
                             value={difficulty}
                             onChange={(e) =>
-                                setDifficulty(e.target.value)
+                                setDifficulty(
+                                    e.target.value
+                                )
                             }
-                            className="w-full border rounded-2xl p-4"
+                            className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                         >
-                            <option>Easy</option>
-                            <option>Medium</option>
-                            <option>Hard</option>
+                            <option value="Easy">
+                                Easy
+                            </option>
+
+                            <option value="Medium">
+                                Medium
+                            </option>
+
+                            <option value="Hard">
+                                Hard
+                            </option>
                         </select>
 
                     </div>
 
                 </div>
 
+
+                {/* ==================================================
+                    POINTS / IMAGE
+                ================================================== */}
+
                 <div className="grid md:grid-cols-2 gap-5">
 
                     <div>
 
-                        <label className="block mb-2 font-medium">
+                        <label className="block mb-2 font-semibold text-gray-700">
                             Points
                         </label>
 
@@ -380,30 +750,44 @@ export default function QuestionForm({
                             min="1"
                             value={points}
                             onChange={(e) =>
-                                setPoints(Number(e.target.value))
+                                setPoints(
+                                    Number(e.target.value)
+                                )
                             }
-                            className="w-full border rounded-2xl p-4"
+                            className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                         />
 
                     </div>
 
+
                     <div>
 
-                        <label className="block mb-2 font-medium">
-                            Image URL (Optional)
+                        <label className="block mb-2 font-semibold text-gray-700">
+                            Image URL
+                            <span className="font-normal text-gray-400">
+                                {" "} (Optional)
+                            </span>
                         </label>
 
                         <input
                             value={imageUrl}
                             onChange={(e) =>
-                                setImageUrl(e.target.value)
+                                setImageUrl(
+                                    e.target.value
+                                )
                             }
-                            className="w-full border rounded-2xl p-4"
+                            placeholder="https://..."
+                            className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                         />
 
                     </div>
 
                 </div>
+
+
+                {/* ==================================================
+                    ANSWERS
+                ================================================== */}
 
                 <AnswerFields
                     answers={answers}
@@ -412,56 +796,78 @@ export default function QuestionForm({
                     setCorrectAnswer={setCorrectAnswer}
                 />
 
+
+                {/* ==================================================
+                    EXPLANATION
+                ================================================== */}
+
                 <div>
 
-                    <label className="block mb-2 font-medium">
+                    <label className="block mb-2 font-semibold text-gray-700">
                         Explanation
+                        <span className="font-normal text-gray-400">
+                            {" "} (Optional)
+                        </span>
                     </label>
 
                     <textarea
                         rows={5}
                         value={explanation}
                         onChange={(e) =>
-                            setExplanation(e.target.value)
+                            setExplanation(
+                                e.target.value
+                            )
                         }
-                        className="w-full border rounded-2xl p-4"
+                        placeholder="Explain why the correct answer is supported by Scripture..."
+                        className="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 focus:outline-none resize-none"
                     />
 
                 </div>
 
             </div>
 
-            <div className="flex gap-4">
+
+            {/* ==================================================
+                ACTIONS
+            ================================================== */}
+
+            <div className="flex flex-col sm:flex-row gap-3">
 
                 <button
                     type="submit"
                     disabled={loading}
-                    className={`px-8 py-4 rounded-2xl font-semibold text-white transition-all ${
-                        loading
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-purple-600 hover:bg-purple-500"
-                    }`}
+                    className={`flex-1 px-8 py-4 rounded-2xl font-semibold text-white transition-all ${
+    loading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-purple-600 hover:bg-purple-500"
+}`}
                 >
                     {loading
                         ? "Saving..."
                         : editingQuestion
-                            ? "Update Question"
-                            : "Save Question"}
+                            ? "💾 Update Question"
+                            : "➕ Save Question"}
                 </button>
 
+
                 {editingQuestion && (
+
                     <button
                         type="button"
                         disabled={loading}
                         onClick={() => {
+
                             resetForm();
+
                             setEditingQuestion(null);
+
                             onCancel?.();
                         }}
-                        className="border border-gray-300 hover:bg-gray-100 px-8 py-4 rounded-2xl font-semibold transition"
+                        className="sm:w-40 border border-gray-300 hover:bg-gray-100 text-gray-700 px-8 py-4 rounded-2xl font-semibold transition"
                     >
                         Cancel
                     </button>
+
                 )}
 
             </div>

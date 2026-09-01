@@ -1,368 +1,217 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-
 import QuizForm from "./QuizForm";
 import QuizCard from "./QuizCard";
-import BibleQuestionManager from "./BibleQuestionManager";
 
-export default function BibleQuizManager() {
+export default function BibleQuizManager({
+                                             onManageQuestions,
+                                             onStatistics,
+                                         }) {
     const [quizzes, setQuizzes] = useState([]);
-    const [selectedQuiz, setSelectedQuiz] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [editingQuiz, setEditingQuiz] = useState(null);
 
     /* ======================================================
        LOAD QUIZZES
     ====================================================== */
 
-    const refreshQuizzes = useCallback(async () => {
-        const { data, error } = await supabase
-            .from("bible_quizzes")
-            .select("*")
-            .order("created_at", {
-                ascending: false,
-            });
-
-        if (error) {
-            console.error("Error loading quizzes:", error);
-            return;
-        }
-
-        setQuizzes(data ?? []);
-    }, []);
-
-    /* ======================================================
-       INITIAL LOAD + REALTIME
-    ====================================================== */
-
-    useEffect(() => {
-        void refreshQuizzes();
-
-        const channel = supabase
-            .channel("bible-quizzes")
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "bible_quizzes",
-                },
-                () => {
-                    void refreshQuizzes();
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [refreshQuizzes]);
-
-    /* ======================================================
-       MANAGE QUESTIONS
-    ====================================================== */
-
-    const handleManageQuestions = (quiz) => {
-        setSelectedQuiz(quiz);
-    };
-
-    /* ======================================================
-       EDIT QUIZ
-    ====================================================== */
-
-    const handleEditQuiz = (quiz) => {
-        setEditingQuiz(quiz);
-
-        // Scroll back to the quiz form
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    };
-
-    /* ======================================================
-       DELETE QUIZ
-    ====================================================== */
-
-    const handleDeleteQuiz = async (quiz) => {
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${quiz.title}"?\n\nThis will delete the quiz, its questions, answers, results, and attempt answers.`
-        );
-
-        if (!confirmed) return;
-
+    const loadQuizzes = useCallback(async () => {
         try {
-            /* ==================================================
-               1. LOAD QUESTIONS
-            ================================================== */
+            setLoading(true);
 
-            const { data: questions, error: questionLoadError } =
-                await supabase
-                    .from("bible_quiz_questions")
-                    .select("id")
-                    .eq("quiz_id", quiz.id);
-
-            if (questionLoadError) {
-                throw questionLoadError;
-            }
-
-            const questionIds =
-                questions?.map((question) => question.id) ?? [];
-
-            /* ==================================================
-               2. LOAD RESULTS
-            ================================================== */
-
-            const { data: results, error: resultsLoadError } =
-                await supabase
-                    .from("bible_quiz_results")
-                    .select("id")
-                    .eq("quiz_id", quiz.id);
-
-            if (resultsLoadError) {
-                throw resultsLoadError;
-            }
-
-            const resultIds =
-                results?.map((result) => result.id) ?? [];
-
-            /* ==================================================
-               3. DELETE ATTEMPT ANSWERS
-            ================================================== */
-
-            if (resultIds.length > 0) {
-                const { error: attemptAnswersError } =
-                    await supabase
-                        .from("bible_quiz_attempt_answers")
-                        .delete()
-                        .in("result_id", resultIds);
-
-                if (attemptAnswersError) {
-                    throw attemptAnswersError;
-                }
-            }
-
-            /* ==================================================
-               4. DELETE RESULTS
-            ================================================== */
-
-            if (resultIds.length > 0) {
-                const { error: resultsError } = await supabase
-                    .from("bible_quiz_results")
-                    .delete()
-                    .in("id", resultIds);
-
-                if (resultsError) {
-                    throw resultsError;
-                }
-            }
-
-            /* ==================================================
-               5. DELETE ANSWERS
-            ================================================== */
-
-            if (questionIds.length > 0) {
-                const { error: answersError } = await supabase
-                    .from("bible_quiz_answers")
-                    .delete()
-                    .in("question_id", questionIds);
-
-                if (answersError) {
-                    throw answersError;
-                }
-            }
-
-            /* ==================================================
-               6. DELETE QUESTIONS
-            ================================================== */
-
-            if (questionIds.length > 0) {
-                const { error: questionsError } = await supabase
-                    .from("bible_quiz_questions")
-                    .delete()
-                    .eq("quiz_id", quiz.id);
-
-                if (questionsError) {
-                    throw questionsError;
-                }
-            }
-
-            /* ==================================================
-               7. DELETE QUIZ
-            ================================================== */
-
-            const { error: quizError } = await supabase
+            const { data, error } = await supabase
                 .from("bible_quizzes")
-                .delete()
-                .eq("id", quiz.id);
+                .select("*")
+                .order("year", { ascending: false })
+                .order("week_number", { ascending: false });
 
-            if (quizError) {
-                throw quizError;
+            if (error) {
+                throw error;
             }
 
-            /* ==================================================
-               8. CLOSE EDIT MODE
-            ================================================== */
-
-            if (editingQuiz?.id === quiz.id) {
-                setEditingQuiz(null);
-            }
-
-            /* ==================================================
-               9. CLOSE QUESTION MANAGER
-            ================================================== */
-
-            if (selectedQuiz?.id === quiz.id) {
-                setSelectedQuiz(null);
-            }
-
-            /* ==================================================
-               10. REFRESH
-            ================================================== */
-
-            await refreshQuizzes();
-
-            alert("✅ Quiz deleted successfully.");
-
+            setQuizzes(data || []);
         } catch (error) {
-            console.error("Delete quiz error:", error);
+            console.error("Error loading quizzes:", error);
 
             alert(
                 error?.message ||
-                "Something went wrong while deleting the quiz."
+                "Unable to load Bible quizzes."
             );
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadQuizzes();
+    }, [loadQuizzes]);
+
 
     /* ======================================================
-       STATISTICS
+       PUBLISH / ACTIVATE QUIZ
+
+       DRAFT
+           published_at = null
+           is_active = false
+
+       PUBLISHED
+           published_at = timestamp
+           is_active = false
+
+       ACTIVE
+           published_at = timestamp
+           is_active = true
+
+       IMPORTANT:
+       Only ONE quiz can be active at a time.
     ====================================================== */
 
-    const handleStatistics = () => {
+    const handlePublish = async (quiz) => {
+        const isAlreadyPublished = Boolean(quiz.published_at);
 
-        alert(
-            "Quiz statistics will be added next."
-        );
-    };
+        /* ==================================================
+           ACTIVATE ALREADY-PUBLISHED QUIZ
+        ================================================== */
 
-    /* ======================================================
-       QUESTION MANAGER
-    ====================================================== */
+        if (isAlreadyPublished) {
+            const confirmed = window.confirm(
+                `Activate "${quiz.title}"?\n\n` +
+                "This will make it the current active Bible quiz. " +
+                "Any other active quiz will be deactivated."
+            );
 
-    if (selectedQuiz) {
-        return (
-            <BibleQuestionManager
-                quiz={selectedQuiz}
-                onBack={() => {
-                    setSelectedQuiz(null);
-                    void refreshQuizzes();
-                }}
-            />
-        );
-    }
-
-    async function publishQuiz(quiz) {
-        const confirmed = window.confirm(
-            `Publish "${quiz.title}"?\n\n` +
-            "This quiz will become the active Bible challenge.\n\n" +
-            "Any other active quiz will be deactivated."
-        );
-
-        if (!confirmed) return;
-
-        try {
-
-            // ==================================================
-            // 1. Find the currently active quiz
-            // ==================================================
-
-            const {
-                data: activeQuiz,
-                error: activeQuizError,
-            } = await supabase
-                .from("bible_quizzes")
-                .select("id, title")
-                .eq("is_active", true)
-                .neq("id", quiz.id)
-                .maybeSingle();
-
-            if (activeQuizError) {
-                throw activeQuizError;
+            if (!confirmed) {
+                return;
             }
 
-            // ==================================================
-            // 2. Deactivate current active quiz
-            // ==================================================
+            try {
+                /*
+                 * First deactivate every other active quiz.
+                 *
+                 * This guarantees that only one quiz is active.
+                 */
 
-            if (activeQuiz) {
-
-                const {
-                    data: deactivatedQuiz,
-                    error: deactivateError,
-                } = await supabase
+                const { error: deactivateError } = await supabase
                     .from("bible_quizzes")
                     .update({
                         is_active: false,
                     })
-                    .eq("id", activeQuiz.id)
-                    .select("id, title, is_active")
-                    .single();
+                    .eq("is_active", true)
+                    .neq("id", quiz.id);
 
                 if (deactivateError) {
                     throw deactivateError;
                 }
+
+                /*
+                 * Now activate this quiz.
+                 *
+                 * published_at is deliberately NOT changed.
+                 */
+
+                const { error: activateError } = await supabase
+                    .from("bible_quizzes")
+                    .update({
+                        is_active: true,
+                    })
+                    .eq("id", quiz.id);
+
+                if (activateError) {
+                    throw activateError;
+                }
+
+                alert("✅ Quiz activated successfully.");
+
+                await loadQuizzes();
+
+            } catch (error) {
+                console.error(
+                    "Quiz activation error:",
+                    error
+                );
+
+                alert(
+                    error?.message ||
+                    "Unable to activate the quiz."
+                );
             }
 
-            // ==================================================
-            // 3. Activate selected quiz
-            // ==================================================
+            return;
+        }
 
-            const {
-                data: publishedQuiz,
-                error: publishError,
-            } = await supabase
+
+        /* ==================================================
+           PUBLISH DRAFT
+        ================================================== */
+
+        const confirmed = window.confirm(
+            `Publish "${quiz.title}"?\n\n` +
+            "The quiz will become publicly published, but it will NOT become active automatically."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
                 .from("bible_quizzes")
                 .update({
-                    is_active: true,
                     published_at: new Date().toISOString(),
-                })
-                .eq("id", quiz.id)
-                .select("id, title, is_active, published_at")
-                .single();
 
-            if (publishError) {
-                throw publishError;
+                    /*
+                     * Publishing does NOT activate the quiz.
+                     */
+                    is_active: false,
+                })
+                .eq("id", quiz.id);
+
+            if (error) {
+                throw error;
             }
 
-            // ==================================================
-            // 4. Refresh
-            // ==================================================
-
-            await refreshQuizzes();
-
             alert(
-                `✅ "${quiz.title}" is now the active Bible challenge.`
+                "✅ Quiz published successfully.\n\n" +
+                "The quiz is now publicly published but remains inactive.\n\n" +
+                "Use 'Activate Quiz' when you want it to become the current Bible quiz."
             );
+
+            await loadQuizzes();
 
         } catch (error) {
             console.error(
-                "❌ PUBLISH QUIZ FAILED:",
+                "Quiz publishing error:",
                 error
             );
 
             alert(
-                `Unable to publish quiz:\n\n${error?.message || error}`
+                error?.message ||
+                "Unable to publish the quiz."
             );
         }
-    }
+    };
 
 
-    async function deactivateQuiz(quiz) {
+    /* ======================================================
+       DEACTIVATE QUIZ
+
+       The quiz remains published.
+
+       Only:
+           is_active = false
+
+       published_at remains unchanged.
+    ====================================================== */
+
+    const handleDeactivate = async (quiz) => {
         const confirmed = window.confirm(
             `Deactivate "${quiz.title}"?\n\n` +
-            "Users will no longer be able to access it as the active quiz."
+            "The quiz will remain published, but it will no longer be the active Bible quiz."
         );
 
-        if (!confirmed) return;
+        if (!confirmed) {
+            return;
+        }
 
         try {
             const { error } = await supabase
@@ -372,102 +221,240 @@ export default function BibleQuizManager() {
                 })
                 .eq("id", quiz.id);
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            alert("Quiz deactivated successfully.");
+            alert("✅ Quiz deactivated successfully.");
 
-            await refreshQuizzes();
+            await loadQuizzes();
 
         } catch (error) {
-            console.error("Error deactivating quiz:", error);
-            alert(`Unable to deactivate quiz:\n\n${error.message}`);
+            console.error(
+                "Quiz deactivation error:",
+                error
+            );
+
+            alert(
+                error?.message ||
+                "Unable to deactivate the quiz."
+            );
         }
-    }
+    };
+
+
     /* ======================================================
-       MAIN UI
+       DELETE QUIZ
+    ====================================================== */
+
+    const handleDelete = async (quiz) => {
+        const confirmed = window.confirm(
+            `Delete "${quiz.title}"?\n\n` +
+            "This will permanently delete the quiz and its questions and answers.\n\n" +
+            "This action cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from("bible_quizzes")
+                .delete()
+                .eq("id", quiz.id);
+
+            if (error) {
+                throw error;
+            }
+
+            /*
+             * If the deleted quiz was being edited,
+             * leave edit mode.
+             */
+
+            if (editingQuiz?.id === quiz.id) {
+                setEditingQuiz(null);
+            }
+
+            alert("✅ Quiz deleted successfully.");
+
+            await loadQuizzes();
+
+        } catch (error) {
+            console.error(
+                "Quiz delete error:",
+                error
+            );
+
+            alert(
+                error?.message ||
+                "Unable to delete the quiz."
+            );
+        }
+    };
+
+
+    /* ======================================================
+       EDIT QUIZ
+    ====================================================== */
+
+    const handleEdit = (quiz) => {
+        setEditingQuiz(quiz);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    };
+
+
+    /* ======================================================
+       CANCEL EDIT
+    ====================================================== */
+
+    const handleCancelEdit = () => {
+        setEditingQuiz(null);
+    };
+
+
+    /* ======================================================
+       LOADING
+    ====================================================== */
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-16">
+
+                <div className="text-center">
+
+                    <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto" />
+
+                    <p className="text-gray-500 mt-4">
+                        Loading Bible quizzes...
+                    </p>
+
+                </div>
+
+            </div>
+        );
+    }
+
+
+    /* ======================================================
+       UI
     ====================================================== */
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-10">
 
             {/* ==================================================
-               HEADER
-            ================================================== */}
-
-            <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-purple-500 mb-2">
-                    Weekly Scripture Challenge
-                </p>
-
-                <h2 className="text-3xl font-bold text-gray-900">
-                    Bible Quizzes
-                </h2>
-
-                <p className="text-gray-500 mt-2">
-                    Create and manage your weekly Bible quizzes.
-                </p>
-            </div>
-
-            {/* ==================================================
-               QUIZ FORM
+                QUIZ FORM
             ================================================== */}
 
             <QuizForm
                 editingQuiz={editingQuiz}
                 setEditingQuiz={setEditingQuiz}
-                refreshQuizzes={refreshQuizzes}
+                refreshQuizzes={loadQuizzes}
             />
 
+
             {/* ==================================================
-               QUIZ LIST
+                QUIZ LIST HEADER
             ================================================== */}
 
-            <section className="space-y-5">
+            <div>
 
-                {quizzes.length === 0 ? (
-                    <div className="bg-white rounded-3xl border border-gray-200 p-10 text-center">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
 
-                        <div className="text-5xl mb-4">
-                            📖
-                        </div>
+                    <div>
 
-                        <h3 className="text-xl font-bold text-gray-900">
-                            No Bible quizzes yet
-                        </h3>
+                        <p className="text-xs uppercase tracking-[0.3em] text-purple-500 font-semibold mb-2">
+                            Scripture Challenges
+                        </p>
+
+                        <h2 className="text-3xl font-bold text-gray-900">
+                            Bible Quizzes
+                        </h2>
 
                         <p className="text-gray-500 mt-2">
-                            Create your first weekly Bible quiz above.
+                            Manage your weekly Bible quizzes, questions,
+                            publication status, and activity.
                         </p>
 
                     </div>
+
+                    <div className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold text-sm">
+                        {quizzes.length} Quiz
+                        {quizzes.length !== 1 ? "zes" : ""}
+                    </div>
+
+                </div>
+
+
+                {/* ==================================================
+                    EMPTY STATE
+                ================================================== */}
+
+                {quizzes.length === 0 ? (
+
+                    <div className="bg-white rounded-3xl border border-gray-200 p-10 text-center">
+
+                        <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto text-3xl">
+                            📖
+                        </div>
+
+                        <h3 className="text-xl font-bold text-gray-900 mt-5">
+                            No Bible quizzes yet
+                        </h3>
+
+                        <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                            Create your first weekly Bible quiz above,
+                            then add questions and answers.
+                        </p>
+
+                    </div>
+
                 ) : (
-                    quizzes.map((quiz) => (
-                        <QuizCard
-                            key={quiz.id}
-                            quiz={quiz}
-                            onManage={() =>
-                                handleManageQuestions(quiz)
-                            }
-                            onEdit={() =>
-                                handleEditQuiz(quiz)
-                            }
-                            onDelete={() =>
-                                handleDeleteQuiz(quiz)
-                            }
-                            onStatistics={() =>
-                                handleStatistics(quiz)
-                            }
-                            onPublish={() =>
-                                publishQuiz(quiz)
-                            }
-                            onDeactivate={() =>
-                                deactivateQuiz(quiz)
-                            }
-                        />
-                    ))
+
+                    /* ==================================================
+                       QUIZ CARDS
+                    ================================================== */
+
+                    <div className="space-y-6">
+
+                        {quizzes.map((quiz) => (
+
+                            <QuizCard
+                                key={quiz.id}
+                                quiz={quiz}
+
+                                onManage={onManageQuestions}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onStatistics={onStatistics}
+
+                                /*
+                                 * QuizCard uses this callback for both:
+                                 *
+                                 * Draft       → Publish Quiz
+                                 * Published  → Activate Quiz
+                                 */
+                                onPublish={handlePublish}
+
+                                /*
+                                 * Published + Active → Deactivate
+                                 */
+                                onDeactivate={handleDeactivate}
+                            />
+
+                        ))}
+
+                    </div>
+
                 )}
 
-            </section>
+            </div>
 
         </div>
     );

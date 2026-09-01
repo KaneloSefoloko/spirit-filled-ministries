@@ -3,6 +3,25 @@ import { supabase } from "../lib/supabaseClient";
 import BibleQuizResults from "../admin/BibleQuizResults";
 import BibleQuizManager from "../admin/BibleQuizManager";
 
+import {
+    BookOpen,
+    BarChart3,
+    UserPlus,
+    MessageSquare,
+    Trash2,
+    Radio,
+    Square,
+    Image as ImageIcon,
+    Upload,
+    CalendarDays,
+    Pencil,
+    Save,
+    X,
+    Plus,
+    MapPin,
+    CheckCircle2,
+    XCircle,
+} from "lucide-react";
 
 /* ======================================================
    BIBLE QUIZ ADMIN TABS
@@ -23,25 +42,27 @@ function BibleQuizAdminTabs() {
                 <button
                     type="button"
                     onClick={() => setActiveTab("management")}
-                    className={`flex-1 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
-                        activeTab === "management"
-                            ? "bg-white text-purple-900 shadow-lg"
-                            : "text-white/70 hover:text-white hover:bg-white/10"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
+    activeTab === "management"
+        ? "bg-white text-purple-900 shadow-lg"
+        : "text-black hover:text-white hover:bg-white/10"
+}`}
                 >
-                    📖 Quiz Management
+                    <BookOpen className="w-4 h-4" />
+                    Quiz Management
                 </button>
 
                 <button
                     type="button"
                     onClick={() => setActiveTab("results")}
-                    className={`flex-1 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
-                        activeTab === "results"
-                            ? "bg-white text-purple-900 shadow-lg"
-                            : "text-white/70 hover:text-white hover:bg-white/10"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all ${
+    activeTab === "results"
+        ? "bg-white text-purple-900 shadow-lg"
+        : "text-black hover:text-white hover:bg-white/10"
+}`}
                 >
-                    📊 Participant Results
+                    <BarChart3 className="w-4 h-4" />
+                    Participant Results
                 </button>
 
             </div>
@@ -73,18 +94,21 @@ function BibleQuizAdminTabs() {
 /* ======================================================
    ADMIN DASHBOARD
 ====================================================== */
+
 export default function AdminDashboard() {
-    /* ========================
+
+    /* ======================================================
        BRANCHES
-    ======================== */
+    ====================================================== */
+
     const [branches, setBranches] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState("");
     const [branchLiveUrl, setBranchLiveUrl] = useState("");
 
-
-    /* ========================
+    /* ======================================================
        ACTIVITIES
-    ======================== */
+    ====================================================== */
+
     const [activities, setActivities] = useState([]);
 
     const [activity, setActivity] = useState("");
@@ -97,59 +121,98 @@ export default function AdminDashboard() {
 
     const [editing, setEditing] = useState(null);
 
-    /* ========================
-       IMAGE
-    ======================== */
+    /* ======================================================
+       EVENT IMAGE
+    ====================================================== */
+
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [uploading, setUploading] = useState(false);
 
-    /* ========================
+    /* ======================================================
        MESSAGE OF THE DAY
-    ======================== */
+    ====================================================== */
+
     const [messageText, setMessageText] = useState("");
     const [messages, setMessages] = useState([]);
 
-    /* ========================
+    /* ======================================================
        NEW MEMBERS
-    ======================== */
+    ====================================================== */
+
     const [newMembers, setNewMembers] = useState([]);
 
-    /* ========================
+    /* ======================================================
        RSVP
-    ======================== */
+    ====================================================== */
+
     const [rsvpStats, setRsvpStats] = useState({});
 
-    /* ========================
-   GALLERY
-======================== */
+    /* ======================================================
+       GALLERY
+    ====================================================== */
+
     const [gallery, setGallery] = useState([]);
     const [galleryImage, setGalleryImage] = useState(null);
     const [galleryUploading, setGalleryUploading] = useState(false);
 
+    /* ======================================================
+       LOAD GALLERY
+    ====================================================== */
+
     const loadGallery = async () => {
-        const { data } = await supabase
+        if (!selectedBranch) return;
+
+        const { data, error } = await supabase
             .from("gallery")
             .select("*")
             .eq("branch_id", selectedBranch);
 
+        if (error) {
+            console.error(
+                "❌ Gallery loading error:",
+                error
+            );
+            return;
+        }
+
         setGallery(data || []);
     };
 
-    /* ========================
+    /* ======================================================
        INITIAL LOAD
-    ======================== */
+    ====================================================== */
+
     useEffect(() => {
+
         async function load() {
-            const { data: b } = await supabase
-                .from("branches")
-                .select("*");
 
-            if (b?.length) {
-                setBranches(b);
-                setSelectedBranch(b[0].id);
+            const { data: branchData, error: branchError } =
+                await supabase
+                    .from("branches")
+                    .select("*")
+                    .order("name", {
+                        ascending: true,
+                    });
 
-                loadActivities(b[0].id);
+            if (branchError) {
+                console.error(
+                    "❌ Branch loading error:",
+                    branchError
+                );
+            }
+
+            if (branchData?.length) {
+
+                setBranches(branchData);
+
+                setSelectedBranch(
+                    branchData[0].id
+                );
+
+                loadActivities(
+                    branchData[0].id
+                );
             }
 
             loadMessages();
@@ -158,83 +221,163 @@ export default function AdminDashboard() {
         }
 
         load();
+
     }, []);
 
+    /* ======================================================
+       BRANCH CHANGE
+    ====================================================== */
 
     useEffect(() => {
+
         if (!selectedBranch) return;
 
         loadActivities(selectedBranch);
 
         loadGallery();
 
-        // ✅ Load branch live URL
         async function loadBranchLive() {
-            const { data } = await supabase
+
+            const { data, error } = await supabase
                 .from("branches")
-                .select("live_url")
+                .select("live_url, stream_status")
                 .eq("id", selectedBranch)
                 .single();
 
+            if (error) {
+                console.error(
+                    "❌ Branch live loading error:",
+                    error
+                );
+                return;
+            }
+
             if (data) {
-                setBranchLiveUrl(data.live_url || "");
+                setBranchLiveUrl(
+                    data.live_url || ""
+                );
             }
         }
 
         loadBranchLive();
+
     }, [selectedBranch]);
 
-    /* ========================
-       LOADERS
-    ======================== */
+    /* ======================================================
+       LOAD ACTIVITIES
+    ====================================================== */
+
     const loadActivities = async (branchId) => {
-        const { data } = await supabase
+
+        if (!branchId) return;
+
+        const { data, error } = await supabase
             .from("activities")
             .select("*")
             .eq("branch_id", branchId)
-            .order("event_date", { ascending: true });
+            .order("event_date", {
+                ascending: true,
+            });
+
+        if (error) {
+            console.error(
+                "❌ Activities loading error:",
+                error
+            );
+            return;
+        }
 
         setActivities(data || []);
     };
 
+    /* ======================================================
+       LOAD MESSAGES
+    ====================================================== */
+
     const loadMessages = async () => {
-        const { data } = await supabase
+
+        const { data, error } = await supabase
             .from("daily_messages")
             .select("*")
-            .order("created_at", { ascending: false });
+            .order("created_at", {
+                ascending: false,
+            });
+
+        if (error) {
+            console.error(
+                "❌ Messages loading error:",
+                error
+            );
+            return;
+        }
 
         setMessages(data || []);
     };
 
+    /* ======================================================
+       LOAD NEW MEMBERS
+    ====================================================== */
+
     const loadNewMembers = async () => {
-        const { data, error } = await supabase
+
+        const {
+            data,
+            error,
+        } = await supabase
             .from("new_members")
             .select(`
-                id,
-                full_name,
-                email,
-                phone,
-                created_at,
-                branch_id,
-                branches ( name )
-            `)
-            .order("created_at", { ascending: false });
+id,
+    full_name,
+    email,
+    phone,
+    created_at,
+    branch_id,
+    branches (
+        name
+    )
+        `)
+            .order("created_at", {
+                ascending: false,
+            });
 
-        if (!error) {
-            setNewMembers(data || []);
+        if (error) {
+            console.error(
+                "❌ New members loading error:",
+                error
+            );
+            return;
         }
+
+        setNewMembers(data || []);
     };
 
+    /* ======================================================
+       LOAD RSVP STATS
+    ====================================================== */
+
     const loadRSVPStats = async () => {
-        const { data } = await supabase
+
+        const {
+            data,
+            error,
+        } = await supabase
             .from("event_rsvps")
             .select("*");
+
+        if (error) {
+            console.error(
+                "❌ RSVP loading error:",
+                error
+            );
+            return;
+        }
 
         if (!data) return;
 
         const grouped = {};
 
         data.forEach((rsvp) => {
+
             if (!grouped[rsvp.event_id]) {
                 grouped[rsvp.event_id] = {
                     yes: 0,
@@ -254,88 +397,152 @@ export default function AdminDashboard() {
         setRsvpStats(grouped);
     };
 
-    /* ========================
-       IMAGE UPLOAD
-    ======================== */
+    /* ======================================================
+       EVENT IMAGE
+    ====================================================== */
+
     const handleFile = (file) => {
+
         if (!file) return;
 
         setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
+
+        setImagePreview(
+            URL.createObjectURL(file)
+        );
     };
 
     const uploadImage = async () => {
+
         if (!imageFile) return null;
 
         setUploading(true);
 
-        const fileName = `${Date.now()}-${imageFile.name}`;
+        const fileName =
+            `${Date.now()}-${imageFile.name}`;
 
-        const { error } = await supabase.storage
+        const {
+            error,
+        } = await supabase.storage
             .from("activity-images")
-            .upload(fileName, imageFile);
+            .upload(
+                fileName,
+                imageFile
+            );
 
         if (error) {
+
+            console.error(
+                "❌ Event image upload error:",
+                error
+            );
+
             alert(error.message);
+
             setUploading(false);
+
             return null;
         }
 
-        const { data } = supabase.storage
-            .from("activity-images")
-            .getPublicUrl(fileName);
+        const { data } =
+            supabase.storage
+                .from("activity-images")
+                .getPublicUrl(fileName);
 
         setUploading(false);
 
         return data.publicUrl;
     };
 
+    /* ======================================================
+       GALLERY IMAGE UPLOAD
+    ====================================================== */
+
     const uploadGalleryImage = async () => {
+
         if (!galleryImage) return null;
 
         setGalleryUploading(true);
 
-        const fileName = `${Date.now()}-${galleryImage.name}`;
+        const fileName =
+            `${Date.now()}-${galleryImage.name}`;
 
-        const { error } = await supabase.storage
+        const {
+            error,
+        } = await supabase.storage
             .from("gallery")
-            .upload(fileName, galleryImage);
+            .upload(
+                fileName,
+                galleryImage
+            );
 
         if (error) {
+
+            console.error(
+                "❌ Gallery upload error:",
+                error
+            );
+
             alert(error.message);
+
             setGalleryUploading(false);
+
             return null;
         }
 
-        const { data } = supabase.storage
-            .from("gallery")
-            .getPublicUrl(fileName);
+        const { data } =
+            supabase.storage
+                .from("gallery")
+                .getPublicUrl(fileName);
 
         setGalleryUploading(false);
 
         return data.publicUrl;
     };
 
-    /* ========================
-       ACTIVITIES CRUD
-    ======================== */
+    /* ======================================================
+       ADD ACTIVITY
+    ====================================================== */
+
     const addActivity = async () => {
+
         if (!activity || !eventDate) {
-            alert("Please complete the required fields.");
+
+            alert(
+                "Please complete the required fields."
+            );
+
             return;
         }
 
-        const imageUrl = await uploadImage();
+        const imageUrl =
+            await uploadImage();
 
-        await supabase.from("activities").insert({
-            branch_id: selectedBranch,
-            title: activity,
-            description,
-            event_date: eventDate,
-            end_date: endDate || null,
-            live_url: liveUrl || null,
-            image_url: imageUrl,
-        });
+        const {
+            error,
+        } = await supabase
+            .from("activities")
+            .insert({
+                branch_id: selectedBranch,
+                title: activity,
+                description,
+                event_date: eventDate,
+                end_date: endDate || null,
+                live_url: liveUrl || null,
+                image_url: imageUrl,
+            });
+
+        if (error) {
+
+            console.error(
+                "❌ Add event error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
 
         setActivity("");
         setDescription("");
@@ -346,78 +553,169 @@ export default function AdminDashboard() {
         setImageFile(null);
         setImagePreview(null);
 
-        loadActivities(selectedBranch);
+        await loadActivities(
+            selectedBranch
+        );
     };
 
+    /* ======================================================
+       DELETE ACTIVITY
+    ====================================================== */
+
     const deleteActivity = async (id) => {
-        const confirmDelete = window.confirm(
-            "Delete this event permanently?"
-        );
+
+        const confirmDelete =
+            window.confirm(
+                "Delete this event permanently?"
+            );
 
         if (!confirmDelete) return;
 
-        await supabase
+        const {
+            error,
+        } = await supabase
             .from("activities")
             .delete()
             .eq("id", id);
 
-        loadActivities(selectedBranch);
+        if (error) {
+
+            console.error(
+                "❌ Delete event error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
+
+        await loadActivities(
+            selectedBranch
+        );
+
+        await loadRSVPStats();
     };
 
+    /* ======================================================
+       UPDATE ACTIVITY
+    ====================================================== */
+
     const updateActivity = async () => {
-        await supabase
+
+        if (!editing) return;
+
+        const {
+            error,
+        } = await supabase
             .from("activities")
             .update({
                 title: editing.title,
                 description: editing.description,
                 event_date: editing.event_date,
-                end_date: editing.end_date,
-                image_url: editing.image_url,
-                live_url: editing.live_url,
+                end_date:
+                    editing.end_date || null,
+                image_url:
+                    editing.image_url || null,
+                live_url:
+                    editing.live_url || null,
             })
             .eq("id", editing.id);
 
+        if (error) {
+
+            console.error(
+                "❌ Update event error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
+
         setEditing(null);
 
-        loadActivities(selectedBranch);
+        await loadActivities(
+            selectedBranch
+        );
     };
 
-    /* ========================
+    /* ======================================================
        MESSAGE CRUD
-    ======================== */
+    ====================================================== */
+
     const addMessage = async () => {
+
         if (!messageText.trim()) return;
 
-        await supabase
+        const {
+            error,
+        } = await supabase
             .from("daily_messages")
             .insert({
-                message: messageText,
+                message: messageText.trim(),
             });
+
+        if (error) {
+
+            console.error(
+                "❌ Add message error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
 
         setMessageText("");
 
-        loadMessages();
+        await loadMessages();
     };
 
     const deleteMessage = async (id) => {
-        await supabase
+
+        const {
+            error,
+        } = await supabase
             .from("daily_messages")
             .delete()
             .eq("id", id);
 
-        loadMessages();
-    };
+        if (error) {
 
-    /* ========================
-       Go Live / End Live CRUD
-    ======================== */
-    const startLive = async () => {
-        if (!branchLiveUrl) {
-            alert("Please paste Facebook Live URL");
+            console.error(
+                "❌ Delete message error:",
+                error
+            );
+
+            alert(error.message);
+
             return;
         }
 
-        await supabase
+        await loadMessages();
+    };
+
+    /* ======================================================
+       GO LIVE
+    ====================================================== */
+
+    const startLive = async () => {
+
+        if (!branchLiveUrl) {
+
+            alert(
+                "Please paste Facebook Live URL"
+            );
+
+            return;
+        }
+
+        const {
+            error,
+        } = await supabase
             .from("branches")
             .update({
                 live_url: branchLiveUrl,
@@ -425,11 +723,32 @@ export default function AdminDashboard() {
             })
             .eq("id", selectedBranch);
 
-        alert("✅ Branch is now LIVE");
+        if (error) {
+
+            console.error(
+                "❌ Start live error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
+
+        alert(
+            "Branch is now LIVE"
+        );
     };
 
+    /* ======================================================
+       STOP LIVE
+    ====================================================== */
+
     const stopLive = async () => {
-        await supabase
+
+        const {
+            error,
+        } = await supabase
             .from("branches")
             .update({
                 live_url: null,
@@ -437,279 +756,498 @@ export default function AdminDashboard() {
             })
             .eq("id", selectedBranch);
 
-        setBranchLiveUrl("");
+        if (error) {
 
-        alert("🛑 Live stream ended");
-    };
+            console.error(
+                "❌ Stop live error:",
+                error
+            );
 
-    /* ========================
-       Gallery Crud
-    ======================== */
-    const addGalleryImage = async () => {
-        if (!galleryImage) {
-            alert("Please select an image");
+            alert(error.message);
+
             return;
         }
 
-        const imageUrl = await uploadGalleryImage();
+        setBranchLiveUrl("");
+
+        alert(
+            "Live stream ended"
+        );
+    };
+
+    /* ======================================================
+       ADD GALLERY IMAGE
+    ====================================================== */
+
+    const addGalleryImage = async () => {
+
+        if (!galleryImage) {
+
+            alert(
+                "Please select an image"
+            );
+
+            return;
+        }
+
+        const imageUrl =
+            await uploadGalleryImage();
 
         if (!imageUrl) return;
 
-        await supabase.from("gallery").insert({
-            branch_id: selectedBranch,
-            image_url: imageUrl,
-        });
+        const {
+            error,
+        } = await supabase
+            .from("gallery")
+            .insert({
+                branch_id: selectedBranch,
+                image_url: imageUrl,
+            });
+
+        if (error) {
+
+            console.error(
+                "❌ Add gallery image error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
 
         setGalleryImage(null);
 
-        loadGallery();
+        await loadGallery();
     };
 
+    /* ======================================================
+       DELETE GALLERY IMAGE
+    ====================================================== */
+
     const deleteGalleryImage = async (id) => {
-        const confirmDelete = window.confirm(
-            "Delete this gallery image?"
-        );
+
+        const confirmDelete =
+            window.confirm(
+                "Delete this gallery image?"
+            );
 
         if (!confirmDelete) return;
 
-        await supabase
+        const {
+            error,
+        } = await supabase
             .from("gallery")
             .delete()
             .eq("id", id);
 
-        loadGallery();
+        if (error) {
+
+            console.error(
+                "❌ Delete gallery image error:",
+                error
+            );
+
+            alert(error.message);
+
+            return;
+        }
+
+        await loadGallery();
     };
+
+    /* ======================================================
+       RENDER
+    ====================================================== */
 
     return (
         <div className="p-6 sm:p-10 max-w-7xl mx-auto space-y-16">
 
-            {/* HEADER */}
+            {/* ==================================================
+                HEADER
+            ================================================== */}
+
             <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-purple-300 mb-3">
+
+                <p className="text-xs uppercase tracking-[0.35em] text-purple-400 mb-3">
                     Admin Panel
                 </p>
 
                 <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
                     Dashboard
                 </h1>
+
             </div>
 
-            {/* ========================
-               NEW MEMBERS
-            ======================== */}
+            {/* ==================================================
+                NEW MEMBERS
+            ================================================== */}
+
             <section className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/20">
-                <h2 className="text-2xl font-bold mb-6">
-                    New Members
-                </h2>
+
+                <div className="flex items-center gap-3 mb-6">
+
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                        <UserPlus className="w-5 h-5" />
+                    </div>
+
+                    <div>
+
+                        <h2 className="text-2xl font-bold">
+                            New Members
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            Recently registered members
+                        </p>
+
+                    </div>
+
+                </div>
 
                 {newMembers.length === 0 ? (
+
                     <p className="text-sm text-gray-500">
                         No new members yet.
                     </p>
+
                 ) : (
+
                     <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
-                        {newMembers.map((m) => (
+
+                        {newMembers.map((member) => (
+
                             <div
-                                key={m.id}
+                                key={member.id}
                                 className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col md:flex-row md:items-center md:justify-between"
                             >
+
                                 <div>
+
                                     <p className="font-bold text-lg">
-                                        {m.full_name}
+                                        {member.full_name}
                                     </p>
 
                                     <p className="text-sm text-gray-600">
-                                        {m.email}
+                                        {member.email}
                                     </p>
 
-                                    {m.phone && (
+                                    {member.phone && (
                                         <p className="text-sm text-gray-600">
-                                            {m.phone}
+                                            {member.phone}
                                         </p>
                                     )}
 
                                     <p className="text-xs text-gray-400 mt-2">
                                         Joined{" "}
                                         {new Date(
-                                            m.created_at
+                                            member.created_at
                                         ).toLocaleString()}
                                     </p>
+
                                 </div>
 
                                 <div className="mt-4 md:mt-0">
-                                    <span className="px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
-                                        {m.branches?.name ||
+
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
+
+                                        <MapPin className="w-4 h-4" />
+
+                                        {member.branches?.name ||
                                             "No branch"}
+
                                     </span>
+
                                 </div>
+
                             </div>
+
                         ))}
+
                     </div>
+
                 )}
+
             </section>
 
-            {/* ========================
-    BIBLE QUIZ MANAGEMENT
- ======================== */}
+            {/* ==================================================
+                BIBLE QUIZ MANAGEMENT
+            ================================================== */}
 
             <section className="space-y-8">
 
-                {/* HEADER */}
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-purple-300 mb-2">
-                            Scripture Challenge
-                        </p>
 
-                        <h2 className="text-3xl font-bold text-white">
+                    <div>
+
+                        <div className="flex items-center gap-3 mb-3">
+
+                            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <BookOpen className="w-5 h-5" />
+                            </div>
+
+                            <p className="text-xs uppercase tracking-[0.35em] text-purple-400">
+                                Scripture Challenge
+                            </p>
+
+                        </div>
+
+                        <h2 className="text-3xl font-bold text-black">
                             Bible Quiz
                         </h2>
 
-                        <p className="text-white/60 mt-2 max-w-2xl">
-                            Create quizzes, manage questions, review participant
-                            submissions, and monitor weekly Bible challenges.
+                        <p className="text-black mt-2 max-w-2xl">
+                            Create quizzes, manage questions, review
+                            participant submissions, and monitor weekly
+                            Bible challenges.
                         </p>
-                    </div>
-                </div>
 
-                {/* ========================
-        BIBLE QUIZ TABS
-    ======================== */}
+                    </div>
+
+                </div>
 
                 <BibleQuizAdminTabs />
 
             </section>
 
+            {/* ==================================================
+                MESSAGE OF THE DAY
+            ================================================== */}
 
+            <section className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 border border-gray-100 overflow-hidden">
 
-            {/* ========================
-               MESSAGE OF THE DAY
-            ======================== */}
-            <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
-                <h2 className="text-2xl font-bold mb-5">
-                    Message of the Day
-                </h2>
+                <div className="flex items-center gap-3 mb-5">
+
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5" />
+                    </div>
+
+                    <div>
+
+                        <h2 className="text-2xl font-bold">
+                            Message of the Day
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            Publish the message displayed on the site
+                        </p>
+
+                    </div>
+
+                </div>
 
                 <textarea
                     className="border border-gray-200 p-4 w-full rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-purple-400"
                     rows={4}
-                    placeholder="Write today’s message…"
+                    placeholder="Write today's message..."
                     value={messageText}
                     onChange={(e) =>
-                        setMessageText(e.target.value)
+                        setMessageText(
+                            e.target.value
+                        )
                     }
                 />
 
                 <button
                     onClick={addMessage}
-                    className="bg-purple-600 hover:bg-purple-500 transition text-white px-6 py-3 rounded-2xl w-full font-semibold"
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 transition text-white px-6 py-3 rounded-2xl w-full font-semibold"
                 >
+                    <Plus className="w-4 h-4" />
                     Publish Message
                 </button>
 
                 <div className="mt-6 space-y-3">
-                    {messages.map((m, index) => (
-                        <div
-                            key={m.id}
-                            className="flex justify-between items-start gap-4 border border-gray-200 p-4 rounded-2xl"
-                        >
-                            <div>
-                                <p
-                                    className={`text-sm ${
-                                        index === 0
-                                            ? "font-bold"
-                                            : ""
-                                    }`}
-                                >
-                                    {m.message}
-                                </p>
 
-                                {index === 0 && (
-                                    <p className="text-xs text-green-600 mt-1">
-                                        Currently displayed on site
+                    {messages.map(
+                        (message, index) => (
+
+                            <div
+                                key={message.id}
+                                className="flex justify-between items-start gap-4 border border-gray-200 p-4 rounded-2xl"
+                            >
+
+                                <div>
+
+                                    <p
+                                        className={`text-sm ${
+    index === 0
+        ? "font-bold"
+        : ""
+}`}
+                                    >
+                                        {message.message}
                                     </p>
-                                )}
+
+                                    {index === 0 && (
+
+                                        <p className="flex items-center gap-1.5 text-xs text-green-600 mt-1">
+
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+
+                                            Currently displayed on site
+
+                                        </p>
+
+                                    )}
+
+                                </div>
+
+                                <button
+                                    onClick={() =>
+                                        deleteMessage(
+                                            message.id
+                                        )
+                                    }
+                                    className="inline-flex items-center gap-2 text-red-500 hover:text-red-700 text-sm font-semibold"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                </button>
+
                             </div>
 
-                            <button
-                                onClick={() =>
-                                    deleteMessage(m.id)
-                                }
-                                className="text-red-500 text-sm font-semibold"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    ))}
+                        )
+                    )}
+
                 </div>
+
             </section>
 
-            {/* ========================
-               BRANCH SELECTOR
-            ======================== */}
+            {/* ==================================================
+                BRANCH SELECTOR
+            ================================================== */}
+
             <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
-                <h2 className="text-2xl font-bold mb-4">
-                    Select Branch
-                </h2>
+
+                <div className="flex items-center gap-3 mb-4">
+
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                        <MapPin className="w-5 h-5" />
+                    </div>
+
+                    <div>
+
+                        <h2 className="text-2xl font-bold">
+                            Select Branch
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            Choose which branch you are managing
+                        </p>
+
+                    </div>
+
+                </div>
 
                 <select
                     className="border border-gray-200 p-4 w-full rounded-2xl outline-none focus:ring-2 focus:ring-purple-400"
                     value={selectedBranch}
                     onChange={(e) =>
-                        setSelectedBranch(e.target.value)
+                        setSelectedBranch(
+                            e.target.value
+                        )
                     }
                 >
-                    {branches.map((b) => (
+
+                    {branches.map((branch) => (
+
                         <option
-                            key={b.id}
-                            value={b.id}
+                            key={branch.id}
+                            value={branch.id}
                         >
-                            {b.name}
+                            {branch.name}
                         </option>
+
                     ))}
+
                 </select>
+
             </section>
 
-            {/* ========================
-               Go Live / End Live
-            ======================== */}
+            {/* ==================================================
+                LIVE CONTROL
+            ================================================== */}
+
             <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
-                <h2 className="text-2xl font-bold mb-4">
-                    Live Control
-                </h2>
+
+                <div className="flex items-center gap-3 mb-4">
+
+                    <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                        <Radio className="w-5 h-5" />
+                    </div>
+
+                    <div>
+
+                        <h2 className="text-2xl font-bold">
+                            Live Control
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            Manage the branch livestream
+                        </p>
+
+                    </div>
+
+                </div>
 
                 <input
                     className="border border-gray-200 p-4 rounded-2xl w-full mb-4"
                     placeholder="Paste Facebook Live URL"
                     value={branchLiveUrl}
-                    onChange={(e) => setBranchLiveUrl(e.target.value)}
+                    onChange={(e) =>
+                        setBranchLiveUrl(
+                            e.target.value
+                        )
+                    }
                 />
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+
                     <button
                         onClick={startLive}
-                        className="bg-green-500 text-white px-6 py-3 rounded-2xl w-full"
+                        className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 transition text-white px-6 py-3 rounded-2xl w-full font-semibold"
                     >
-                        🔴 Go Live
+                        <Radio className="w-4 h-4" />
+                        Go Live
                     </button>
 
                     <button
                         onClick={stopLive}
-                        className="bg-red-500 text-white px-6 py-3 rounded-2xl w-full"
+                        className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-400 transition text-white px-6 py-3 rounded-2xl w-full font-semibold"
                     >
+                        <Square className="w-4 h-4" />
                         End Live
                     </button>
+
                 </div>
+
             </section>
 
-            {/* ========================
-                     GALLERY
-                ======================== */}
+            {/* ==================================================
+                GALLERY
+            ================================================== */}
+
             <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
 
-                <h2 className="text-2xl font-bold mb-6">
-                    Gallery
-                </h2>
+                <div className="flex flex-wrap items-center gap-3 mb-6">
+
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5" />
+                    </div>
+
+                    <div>
+
+                        <h2 className="text-2xl font-bold">
+                            Gallery
+                        </h2>
+
+                        <p className="text-sm text-gray-500">
+                            Manage branch gallery images
+                        </p>
+
+                    </div>
+
+                </div>
 
                 <div className="space-y-4">
 
@@ -717,61 +1255,106 @@ export default function AdminDashboard() {
                         type="file"
                         accept="image/*"
                         onChange={(e) =>
-                            setGalleryImage(e.target.files?.[0] || null)
+                            setGalleryImage(
+                                e.target.files?.[0] ||
+                                null
+                            )
                         }
                     />
 
                     <button
                         onClick={addGalleryImage}
                         disabled={galleryUploading}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-2xl"
+                        className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-6 py-3 rounded-2xl font-semibold transition"
                     >
-                        {galleryUploading
-                            ? "Uploading..."
-                            : "Upload Photo"}
+
+                        {galleryUploading ? (
+                            <>
+                                <Upload className="w-4 h-4 animate-pulse" />
+                                Uploading...
+                            </>
+                        ) : (
+                            <>
+                                <Upload className="w-4 h-4" />
+                                Upload Photo
+                            </>
+                        )}
+
                     </button>
 
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
 
-                    {gallery.map((img) => (
+                    {gallery.map((image) => (
+
                         <div
-                            key={img.id}
-                            className="relative"
+                            key={image.id}
+                            className="relative group"
                         >
+
                             <img
-                                src={img.image_url}
+                                src={image.image_url}
                                 alt=""
                                 className="w-full h-40 object-cover rounded-xl"
                             />
 
                             <button
                                 onClick={() =>
-                                    deleteGalleryImage(img.id)
+                                    deleteGalleryImage(
+                                        image.id
+                                    )
                                 }
-                                className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                                className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-xl transition opacity-90 group-hover:opacity-100"
                             >
+                                <Trash2 className="w-3.5 h-3.5" />
                                 Delete
                             </button>
+
                         </div>
+
                     ))}
+
                 </div>
 
             </section>
 
-            {/* ========================
-               ADD EVENT
-            ======================== */}
-            <section className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
-                <h2 className="text-2xl font-bold mb-6">
-                    Add Event
-                </h2>
+            {/* ==================================================
+                ADD EVENT
+            ================================================== */}
 
-                <div className="grid gap-4">
+            <section className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden">
 
+                {/* =====================================================
+        HEADER
+    ====================================================== */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                        <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+
+                    <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+                            Add Event
+                        </h2>
+
+                        <p className="text-sm text-gray-500 mt-1 break-words">
+                            Create a new church event
+                        </p>
+                    </div>
+
+                </div>
+
+
+                {/* =====================================================
+        FORM
+    ====================================================== */}
+                <div className="grid gap-4 w-full min-w-0">
+
+                    {/* Event Title */}
                     <input
-                        className="border border-gray-200 p-4 rounded-2xl"
+                        className="w-full min-w-0 border border-gray-200 p-3.5 sm:p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         placeholder="Event title"
                         value={activity}
                         onChange={(e) =>
@@ -779,8 +1362,10 @@ export default function AdminDashboard() {
                         }
                     />
 
+
+                    {/* Description */}
                     <textarea
-                        className="border border-gray-200 p-4 rounded-2xl"
+                        className="w-full min-w-0 border border-gray-200 p-3.5 sm:p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-y"
                         rows={5}
                         placeholder="Event description..."
                         value={description}
@@ -789,44 +1374,55 @@ export default function AdminDashboard() {
                         }
                     />
 
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm font-medium mb-2">
+
+                    {/* =================================================
+            DATE & TIME
+        ================================================== */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
+
+                        {/* Start */}
+                        <div className="min-w-0 w-full">
+
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Start Date & Time
-                            </p>
+                            </label>
 
                             <input
                                 type="datetime-local"
-                                className="border border-gray-200 p-4 rounded-2xl w-full"
+                                className="block w-full max-w-full min-w-0 border border-gray-200 p-3.5 sm:p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base"
                                 value={eventDate}
                                 onChange={(e) =>
-                                    setEventDate(
-                                        e.target.value
-                                    )
+                                    setEventDate(e.target.value)
                                 }
                             />
+
                         </div>
 
-                        <div>
-                            <p className="text-sm font-medium mb-2">
+
+                        {/* End */}
+                        <div className="min-w-0 w-full">
+
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                 End Date & Time
-                            </p>
+                            </label>
 
                             <input
                                 type="datetime-local"
-                                className="border border-gray-200 p-4 rounded-2xl w-full"
+                                className="block w-full max-w-full min-w-0 border border-gray-200 p-3.5 sm:p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base"
                                 value={endDate}
                                 onChange={(e) =>
-                                    setEndDate(
-                                        e.target.value
-                                    )
+                                    setEndDate(e.target.value)
                                 }
                             />
+
                         </div>
+
                     </div>
 
+
+                    {/* Live Stream URL */}
                     <input
-                        className="border border-gray-200 p-4 rounded-2xl"
+                        className="w-full min-w-0 border border-gray-200 p-3.5 sm:p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         placeholder="Live stream URL (optional)"
                         value={liveUrl}
                         onChange={(e) =>
@@ -834,187 +1430,346 @@ export default function AdminDashboard() {
                         }
                     />
 
-                    <div>
-                        <p className="text-sm font-medium mb-3">
+
+                    {/* =================================================
+            IMAGE UPLOAD
+        ================================================== */}
+                    <div className="w-full min-w-0">
+
+                        <p className="text-sm font-medium text-gray-700 mb-3">
                             Event Background Image
                         </p>
 
-                        <input
-                            type="file"
-                            onChange={(e) =>
-                                handleFile(
-                                    e.target.files[0]
-                                )
-                            }
-                        />
+                        <div className="w-full min-w-0">
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                    handleFile(
+                                        e.target.files?.[0] || null
+                                    )
+                                }
+                                className="block w-full max-w-full text-sm text-gray-500
+                        file:mr-3
+                        file:py-2.5
+                        file:px-4
+                        file:rounded-xl
+                        file:border-0
+                        file:text-sm
+                        file:font-semibold
+                        file:bg-blue-50
+                        file:text-blue-700
+                        hover:file:bg-blue-100
+                        file:cursor-pointer"
+                            />
+
+                        </div>
+
                     </div>
 
+
+                    {/* =================================================
+            IMAGE PREVIEW
+        ================================================== */}
                     {imagePreview && (
-                        <img
-                            src={imagePreview}
-                            className="h-56 w-full rounded-2xl object-cover border"
-                        />
+
+                        <div className="w-full min-w-0">
+
+                            <img
+                                src={imagePreview}
+                                alt="Event preview"
+                                className="w-full h-40 sm:h-56 lg:h-64 rounded-2xl object-cover border border-gray-200"
+                            />
+
+                        </div>
+
                     )}
 
+
+                    {/* =================================================
+            SUBMIT
+        ================================================== */}
                     <button
                         disabled={uploading}
                         onClick={addActivity}
-                        className="mt-2 bg-sky-500 hover:bg-sky-400 transition text-gray-400 px-6 py-4 rounded-2xl w-full font-semibold"
+                        className="mt-2 w-full min-w-0 flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 active:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-white px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-semibold text-sm sm:text-base"
                     >
-                        {uploading
-                            ? "Uploading..."
-                            : "Add Event"}
+
+                        {uploading ? (
+                            <>
+                                <Upload className="w-4 h-4 animate-pulse shrink-0" />
+                                <span>Uploading...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Plus className="w-4 h-4 shrink-0" />
+                                <span>Add Event</span>
+                            </>
+                        )}
+
                     </button>
+
                 </div>
+
             </section>
 
-            {/* ========================
-               EVENTS LIST
-            ======================== */}
+            {/* ==================================================
+                EVENTS LIST
+            ================================================== */}
+
             <section className="space-y-5">
 
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">
-                        Events
-                    </h2>
 
-                    <span className="text-sm text-white/70">
+                    <div>
+
+                        <h2 className="text-2xl font-bold text-black dark:text-gray-100">
+                            Events
+                        </h2>
+
+                        <p className="text-sm text-black dark:text-gray-100 mt-1">
+                            Manage events for the selected branch
+                        </p>
+
+                    </div>
+
+                    <span className="text-sm text-black dark:text-gray-100">
                         {activities.length} total
                     </span>
+
                 </div>
 
-                {activities.map((a) => {
-                    const stats = rsvpStats[a.id] || {
-                        yes: 0,
-                        no: 0,
-                    };
+                {activities.length === 0 ? (
 
-                    return (
-                        <div
-                            key={a.id}
-                            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl"
-                        >
+                    <div className="rounded-3xl border border-white/30 bg-white/30 backdrop-blur-xl p-10 text-center">
 
-                            {/* IMAGE */}
+                        <CalendarDays className="w-10 h-10 mx-auto text-black dark:text-gray-100 mb-4" />
+
+                        <p className="text-black dark:text-gray-100 font-semibold">
+                            No events yet
+                        </p>
+
+                        <p className="text-sm text-black dark:text-gray-100 mt-1">
+                            Add an event above to get started.
+                        </p>
+
+                    </div>
+
+                ) : (
+
+                    activities.map((event) => {
+
+                        const stats =
+                            rsvpStats[event.id] || {
+                                yes: 0,
+                                no: 0,
+                            };
+
+                        return (
+
                             <div
-                                className="h-48 bg-cover bg-center"
-                                style={{
-                                    backgroundImage: `url(${
-                                        a.image_url ||
-                                        "https://images.unsplash.com/photo-1507692049790-de58290a4334"
-                                    })`,
-                                }}
-                            />
+                                key={event.id}
+                                className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl"
+                            >
 
-                            {/* CONTENT */}
-                            <div className="p-6">
+                                {/* IMAGE */}
 
-                                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                                <div
+                                    className="h-48 bg-cover bg-center"
+                                    style={{
+                                        backgroundImage:
+                                            `url(${
+    event.image_url ||
+    "https://images.unsplash.com/photo-1507692049790-de58290a4334"
+})`,
+                                    }}
+                                />
 
-                                    <div className="flex-1">
-                                        <h3 className="text-2xl font-bold text-white">
-                                            {a.title}
-                                        </h3>
+                                {/* CONTENT */}
 
-                                        <p className="text-white/70 mt-3 leading-relaxed">
-                                            {a.description ||
-                                                "No description yet."}
-                                        </p>
+                                <div className="p-6">
 
-                                        <div className="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
+                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
-                                            <div className="bg-white/10 rounded-2xl p-4">
-                                                <p className="text-white/50 uppercase text-xs tracking-widest mb-1">
-                                                    Starts
-                                                </p>
+                                        <div className="flex-1">
 
-                                                <p className="text-white font-medium">
-                                                    {new Date(
-                                                        a.event_date
-                                                    ).toLocaleString()}
-                                                </p>
-                                            </div>
+                                            <h3 className="text-2xl font-bold text-white">
+                                                {event.title}
+                                            </h3>
 
-                                            {a.end_date && (
+                                            <p className="text-white/70 mt-3 leading-relaxed">
+                                                {event.description ||
+                                                    "No description yet."}
+                                            </p>
+
+                                            <div className="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
+
                                                 <div className="bg-white/10 rounded-2xl p-4">
-                                                    <p className="text-white/50 uppercase text-xs tracking-widest mb-1">
-                                                        Ends
+
+                                                    <p className="flex items-center gap-2 text-white/50 uppercase text-xs tracking-widest mb-1">
+                                                        <CalendarDays className="w-3.5 h-3.5" />
+                                                        Starts
                                                     </p>
 
                                                     <p className="text-white font-medium">
                                                         {new Date(
-                                                            a.end_date
+                                                            event.event_date
                                                         ).toLocaleString()}
                                                     </p>
+
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        {/* RSVP */}
-                                        <div className="flex gap-4 mt-5">
+                                                {event.end_date && (
 
-                                            <div className="px-4 py-3 rounded-2xl bg-green-500/20 border border-green-400/20">
-                                                <p className="text-xs uppercase tracking-widest text-green-300">
-                                                    YES RSVP
-                                                </p>
+                                                    <div className="bg-white/10 rounded-2xl p-4">
 
-                                                <p className="text-2xl font-bold text-white">
-                                                    {stats.yes}
-                                                </p>
+                                                        <p className="flex items-center gap-2 text-white/50 uppercase text-xs tracking-widest mb-1">
+                                                            <CalendarDays className="w-3.5 h-3.5" />
+                                                            Ends
+                                                        </p>
+
+                                                        <p className="text-white font-medium">
+                                                            {new Date(
+                                                                event.end_date
+                                                            ).toLocaleString()}
+                                                        </p>
+
+                                                    </div>
+
+                                                )}
+
                                             </div>
 
-                                            <div className="px-4 py-3 rounded-2xl bg-red-500/20 border border-red-400/20">
-                                                <p className="text-xs uppercase tracking-widest text-red-300">
-                                                    NO RSVP
-                                                </p>
+                                            {/* RSVP */}
 
-                                                <p className="text-2xl font-bold text-white">
-                                                    {stats.no}
-                                                </p>
+                                            <div className="flex flex-wrap gap-4 mt-5">
+
+                                                <div className="px-4 py-3 rounded-2xl bg-green-500/20 border border-green-400/20">
+
+                                                    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-green-300">
+
+                                                        <CheckCircle2 className="w-4 h-4" />
+
+                                                        YES RSVP
+
+                                                    </p>
+
+                                                    <p className="text-2xl font-bold text-white">
+                                                        {stats.yes}
+                                                    </p>
+
+                                                </div>
+
+                                                <div className="px-4 py-3 rounded-2xl bg-red-500/20 border border-red-400/20">
+
+                                                    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-red-300">
+
+                                                        <XCircle className="w-4 h-4" />
+
+                                                        NO RSVP
+
+                                                    </p>
+
+                                                    <p className="text-2xl font-bold text-white">
+                                                        {stats.no}
+                                                    </p>
+
+                                                </div>
+
                                             </div>
+
                                         </div>
+
+                                        {/* ACTIONS */}
+
+                                        <div className="flex flex-row lg:flex-col gap-3">
+
+                                            <button
+                                                onClick={() =>
+                                                    setEditing(
+                                                        event
+                                                    )
+                                                }
+                                                className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 transition font-semibold"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    deleteActivity(
+                                                        event.id
+                                                    )
+                                                }
+                                                className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-400 transition text-white font-semibold"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Delete
+                                            </button>
+
+                                        </div>
+
                                     </div>
 
-                                    {/* ACTIONS */}
-                                    <div className="flex flex-row lg:flex-col gap-3">
-                                        <button
-                                            onClick={() =>
-                                                setEditing(a)
-                                            }
-                                            className="px-5 py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 transition font-semibold"
-                                        >
-                                            Edit
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                deleteActivity(
-                                                    a.id
-                                                )
-                                            }
-                                            className="px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-400 transition text-white font-semibold"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
                                 </div>
+
                             </div>
-                        </div>
-                    );
-                })}
+
+                        );
+                    })
+
+                )}
+
             </section>
 
-            {/* ========================
-               EDIT MODAL
-            ======================== */}
+            {/* ==================================================
+                EDIT EVENT MODAL
+            ================================================== */}
+
             {editing && (
+
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
 
                     <div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 
-                        <h2 className="text-2xl font-bold mb-6">
-                            Edit Event
-                        </h2>
+                        {/* HEADER */}
+
+                        <div className="flex items-center justify-between mb-6">
+
+                            <div className="flex items-center gap-3">
+
+                                <div className="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-700 flex items-center justify-center">
+                                    <Pencil className="w-5 h-5" />
+                                </div>
+
+                                <div>
+
+                                    <h2 className="text-2xl font-bold">
+                                        Edit Event
+                                    </h2>
+
+                                    <p className="text-sm text-gray-500">
+                                        Update event information
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setEditing(null)
+                                }
+                                className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-500 transition"
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                        </div>
 
                         <div className="space-y-4">
 
@@ -1025,7 +1780,7 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         title:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
@@ -1041,7 +1796,7 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         description:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
@@ -1056,7 +1811,7 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         event_date:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
@@ -1072,7 +1827,7 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         end_date:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
@@ -1088,7 +1843,7 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         image_url:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
@@ -1104,17 +1859,16 @@ export default function AdminDashboard() {
                                     setEditing({
                                         ...editing,
                                         live_url:
-                                        e.target.value,
+                                            e.target.value,
                                     })
                                 }
                             />
 
                             <button
-                                onClick={
-                                    updateActivity
-                                }
-                                className="bg-green-500 hover:bg-green-400 transition text-white px-4 py-4 w-full rounded-2xl font-semibold"
+                                onClick={updateActivity}
+                                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 transition text-white px-4 py-4 w-full rounded-2xl font-semibold"
                             >
+                                <Save className="w-4 h-4" />
                                 Save Changes
                             </button>
 
@@ -1122,14 +1876,20 @@ export default function AdminDashboard() {
                                 onClick={() =>
                                     setEditing(null)
                                 }
-                                className="w-full py-3 text-gray-500"
+                                className="flex items-center justify-center gap-2 w-full py-3 text-gray-500 hover:text-gray-800 transition"
                             >
+                                <X className="w-4 h-4" />
                                 Cancel
                             </button>
+
                         </div>
+
                     </div>
+
                 </div>
+
             )}
+
         </div>
     );
 }

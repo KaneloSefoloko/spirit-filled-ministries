@@ -32,6 +32,9 @@ export default function QuizCard({
         });
     };
 
+    const isPublished = Boolean(quiz.published_at);
+    const isActive = Boolean(quiz.is_active);
+
     return (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 p-7">
 
@@ -43,17 +46,19 @@ export default function QuizCard({
 
                 <div className="flex-1">
 
-                    {/* Quiz Header */}
+                    {/* =================================================
+                        QUIZ HEADER
+                    ================================================= */}
 
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-start gap-3 flex-wrap">
 
-                        <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center text-2xl">
+                        <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
                             <BookOpen className="w-7 h-7 text-purple-600" />
                         </div>
 
-                        <div>
+                        <div className="flex-1 min-w-0">
 
-                            <h3 className="text-2xl font-bold text-gray-900">
+                            <h3 className="text-2xl font-bold text-gray-900 break-words">
                                 {quiz.title}
                             </h3>
 
@@ -63,74 +68,85 @@ export default function QuizCard({
 
                         </div>
 
-                        <div className="flex flex-wrap gap-2 mt-3">
+                    </div>
 
-                            {quiz.is_active ? (
-                                <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold flex items-center gap-1.5">
-                                    <CircleCheck className="w-4 h-4" />
-                                    Active
-                                </span>
-                            ) : quiz.published_at ? (
-                                <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold flex items-center gap-1.5">
-                                    <Globe2 className="w-4 h-4" />
-                                    Published
-                                </span>
-                            ) : (
-                                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold flex items-center gap-1.5">
-                                    <Circle className="w-4 h-4" />
-                                    Draft
-                                </span>
-                            )}
 
-                        </div>
+                    {/* =================================================
+                        PRIMARY STATUS
+                    ================================================= */}
+
+                    <div className="flex flex-wrap gap-2 mt-5">
+
+                        {isActive ? (
+
+                            <span className="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-sm font-semibold flex items-center gap-1.5">
+                                <CircleCheck className="w-4 h-4" />
+                                Active
+                            </span>
+
+                        ) : isPublished ? (
+
+                            <span className="px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold flex items-center gap-1.5">
+                                <Globe2 className="w-4 h-4" />
+                                Published
+                            </span>
+
+                        ) : (
+
+                            <span className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold flex items-center gap-1.5">
+                                <Circle className="w-4 h-4" />
+                                Draft
+                            </span>
+
+                        )}
 
                     </div>
 
 
-                    {/* Quiz Meta */}
+                    {/* =================================================
+                        QUIZ META
+                    ================================================= */}
 
                     <div className="mt-6 flex flex-wrap gap-3">
 
-                        <span
-                            className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-medium flex items-center gap-2">
-                            <CalendarDays className="w-4 h-4"/>
+                        <span className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-medium flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4" />
                             Week {quiz.week_number ?? "-"}
                         </span>
 
-                        <span
-                            className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-medium flex items-center gap-2">
-                            <Calendar className="w-4 h-4"/>
+                        <span className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-medium flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
                             {quiz.year ?? "-"}
                         </span>
 
-                        {/* Published Status */}
-
                         <span
                             className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 ${
-                                quiz.published_at
+                                isPublished
                                     ? "bg-blue-100 text-blue-700"
                                     : "bg-orange-100 text-orange-700"
                             }`}
                         >
-                             {quiz.published_at ? (
-                                 <>
-                                     <Globe2 className="w-4 h-4" />
-                                     Published
-                                 </>
-                             ) : (
-                                 <>
-                                     <Pencil className="w-4 h-4" />
-                                     Draft
-                                 </>
-                             )}
+                            {isPublished ? (
+                                <>
+                                    <Globe2 className="w-4 h-4" />
+                                    Published
+                                </>
+                            ) : (
+                                <>
+                                    <Pencil className="w-4 h-4" />
+                                    Draft
+                                </>
+                            )}
                         </span>
 
                     </div>
 
 
-                    {/* Dates */}
+                    {/* =================================================
+                        DATES
+                    ================================================= */}
 
-                    <div className="mt-6 grid md:grid-cols-2 gap-4">
+                    <div className="mt-6 grid sm:grid-cols-2 gap-4">
 
                         <div className="bg-gray-50 rounded-2xl p-4">
 
@@ -143,7 +159,6 @@ export default function QuizCard({
                             </p>
 
                         </div>
-
 
                         <div className="bg-gray-50 rounded-2xl p-4">
 
@@ -166,85 +181,131 @@ export default function QuizCard({
                     RIGHT SIDE
                 ====================================================== */}
 
-                <div className="flex flex-col gap-3 min-w-[220px]">
+                <div className="flex flex-col gap-3 w-full lg:w-[240px] lg:min-w-[240px]">
 
-                    {/* Manage Questions */}
+                    {/* =================================================
+                        MANAGE QUESTIONS
+                    ================================================= */}
 
                     <button
                         onClick={() => onManage(quiz)}
-                        className="bg-sky-600 hover:bg-sky-500 text-white rounded-xl py-3 font-semibold transition"
+                        className="bg-sky-600 hover:bg-sky-500 text-white rounded-xl py-3 px-4 font-semibold transition"
                     >
                         <span className="flex items-center justify-center gap-2">
-                            <ListChecks className="w-5 h-5"/>
-                                Manage Questions
+                            <ListChecks className="w-5 h-5" />
+                            Manage Questions
                         </span>
                     </button>
 
 
-                    {/* Edit Quiz */}
+                    {/* =================================================
+                        EDIT QUIZ
+                    ================================================= */}
 
                     <button
                         onClick={() => onEdit(quiz)}
-                        className="bg-amber-500 hover:bg-amber-400 text-white rounded-xl py-3 font-semibold transition"
+                        className="bg-amber-500 hover:bg-amber-400 text-white rounded-xl py-3 px-4 font-semibold transition"
                     >
                         <span className="flex items-center justify-center gap-2">
-                             <Pencil className="w-5 h-5" />
-                                 Edit Quiz
+                            <Pencil className="w-5 h-5" />
+                            Edit Quiz
                         </span>
                     </button>
 
 
-                    {/* Statistics */}
+                    {/* =================================================
+                        STATISTICS
+                    ================================================= */}
 
                     <button
                         onClick={() => onStatistics(quiz)}
-                        className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl py-3 font-semibold transition"
+                        className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl py-3 px-4 font-semibold transition"
                     >
                         <span className="flex items-center justify-center gap-2">
                             <BarChart3 className="w-5 h-5" />
-                                Statistics
+                            Statistics
                         </span>
                     </button>
 
 
-                    {/* Delete */}
+                    {/* =================================================
+                        DELETE
+                    ================================================= */}
 
                     <button
                         onClick={() => onDelete(quiz)}
-                        className="bg-red-600 hover:bg-red-500 text-white rounded-xl py-3 font-semibold transition"
+                        className="bg-red-600 hover:bg-red-500 text-white rounded-xl py-3 px-4 font-semibold transition"
                     >
                         <span className="flex items-center justify-center gap-2">
                             <Trash2 className="w-5 h-5" />
-                              Delete Quiz
+                            Delete Quiz
                         </span>
                     </button>
 
-                    {/* =====================================================
-                     PUBLISH / DEACTIVATE
-                     ====================================================== */}
 
-                    {quiz.published_at && quiz.is_active ? (
-                        <button
-                            onClick={() => onDeactivate(quiz)}
-                            className="bg-orange-500 hover:bg-orange-400 text-white px-5 py-3 rounded-xl font-semibold transition"
-                        >
-                            <span className="flex items-center justify-center gap-2">
-                                <PauseCircle className="w-5 h-5" />
-                                Deactivate
-                            </span>
-                        </button>
-                    ) : (
+                    {/* =================================================
+                        PUBLISH / ACTIVATE / DEACTIVATE
+                    ================================================= */}
+
+                    {!isPublished ? (
+
+                        /*
+                         * DRAFT
+                         *
+                         * Publishing should set:
+                         * published_at = current timestamp
+                         *
+                         * and should NOT automatically mean that
+                         * the quiz becomes active unless the manager
+                         * explicitly decides that.
+                         */
+
                         <button
                             onClick={() => onPublish(quiz)}
-                            className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-xl font-semibold transition"
+                            className="bg-green-600 hover:bg-green-500 text-white rounded-xl py-3 px-4 font-semibold transition"
                         >
                             <span className="flex items-center justify-center gap-2">
                                 <Rocket className="w-5 h-5" />
                                 Publish Quiz
                             </span>
                         </button>
+
+                    ) : isActive ? (
+
+                        /*
+                         * PUBLISHED + ACTIVE
+                         */
+
+                        <button
+                            onClick={() => onDeactivate(quiz)}
+                            className="bg-orange-500 hover:bg-orange-400 text-white rounded-xl py-3 px-4 font-semibold transition"
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <PauseCircle className="w-5 h-5" />
+                                Deactivate
+                            </span>
+                        </button>
+
+                    ) : (
+
+                        /*
+                         * PUBLISHED + INACTIVE
+                         */
+
+                        <button
+                            onClick={() => onPublish(quiz)}
+                            className="bg-green-600 hover:bg-green-500 text-white rounded-xl py-3 px-4 font-semibold transition"
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <Rocket className="w-5 h-5" />
+                                Activate Quiz
+                            </span>
+                        </button>
+
                     )}
+
                 </div>
+
             </div>
 
         </div>

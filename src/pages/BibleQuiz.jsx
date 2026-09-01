@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { BookOpen} from "lucide-react";
 
 export default function BibleQuiz() {
     const [quiz, setQuiz] = useState(null);
@@ -37,6 +38,7 @@ export default function BibleQuiz() {
                 // -------------------------------------------------
                 // ACTIVE QUIZ
                 // -------------------------------------------------
+                const today = new Date().toISOString().split("T")[0];
 
                 const {
                     data: quizData,
@@ -45,6 +47,8 @@ export default function BibleQuiz() {
                     .from("bible_quizzes")
                     .select("*")
                     .eq("is_active", true)
+                    .lte("start_date", today)
+                    .gte("end_date", today)
                     .order("created_at", { ascending: false })
                     .limit(1)
                     .maybeSingle();
@@ -312,8 +316,8 @@ id,
                 alert(
                     `Please answer all questions before submitting.\n\n` +
                         `${unansweredQuestions.length} question${
-    unansweredQuestions.length === 1 ? "" : "s"
-} remaining.`
+                        unansweredQuestions.length === 1 ? "" : "s"
+                    } remaining.`
                 );
 
                 return;
@@ -473,7 +477,7 @@ id,
             <div className="min-h-screen bg-[#f7f7f9] flex items-center justify-center px-5">
                 <div className="w-full max-w-lg bg-white rounded-[30px] shadow-xl border border-gray-100 p-8 sm:p-12 text-center">
                     <div className="w-20 h-20 mx-auto mb-7 rounded-[24px] bg-purple-50 flex items-center justify-center text-3xl">
-                        📖
+                        <BookOpen className="w-10 h-10 mb-5 text-white"/>
                     </div>
 
                     <p className="text-xs uppercase tracking-[0.3em] font-semibold text-purple-600 mb-4">
@@ -1092,18 +1096,13 @@ id,
                     <div className="p-5 sm:p-8 md:p-10 lg:p-12">
                         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-6">
                             <span
-                                className={`
-inline-flex items-center
-px-3.5 py-1.5 rounded-full
-text-[11px] sm:text-xs font-semibold
-${
-    question.difficulty === "Hard"
-        ? "bg-red-50 text-red-600"
-        : question.difficulty === "Medium"
-            ? "bg-amber-50 text-amber-600"
-            : "bg-purple-50 text-purple-700"
-}
-`}
+                                className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold 
+                                ${question.difficulty === "Hard" 
+                                    ? "bg-red-50 text-red-600" 
+                                    : question.difficulty === "Medium" 
+                                        ? "bg-amber-50 text-amber-600" 
+                                        : "bg-purple-50 text-purple-700"}
+                                        `}
                             >
                                 {question.difficulty}
                             </span>
@@ -1165,62 +1164,42 @@ ${
                                                 answer.id
                                             )
                                         }
-                                        className={`
-group relative w-full text-left
-rounded-2xl border-2 p-4 sm:p-5
-transition-all duration-200
-focus:outline-none
-focus-visible:ring-4
-focus-visible:ring-purple-500/20
-${
-    isSelected
-        ? "border-purple-600 bg-purple-50 shadow-[0_8px_25px_rgba(124,58,237,0.12)]"
-        : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/30 hover:-translate-y-[1px]"
-}
-`}
+                                        className={`group relative w-full text-left rounded-2xl border-2 p-4 sm:p-5 
+                                        transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/20
+                                        ${isSelected 
+                                            ? "border-purple-600 bg-purple-50 shadow-[0_8px_25px_rgba(124,58,237,0.12)]" 
+                                            : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/30 hover:-translate-y-[1px]"
+                                        }
+                                        `}
                                     >
                                         <div className="flex items-center gap-3.5 sm:gap-4">
                                             <div
-                                                className={`
-w-11 h-11 sm:w-12 sm:h-12 shrink-0
-rounded-xl flex items-center justify-center
-font-bold text-sm
-transition-all duration-200
-${
-    isSelected
-        ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
-        : "bg-gray-100 text-gray-700 group-hover:bg-purple-100 group-hover:text-purple-700"
-}
-`}
+                                                className={`w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl flex items-center justify-center 
+                                                font-bold text-sm transition-all duration-200 
+                                                ${isSelected 
+                                                    ? "bg-purple-600 text-white shadow-md shadow-purple-600/20" 
+                                                    : "bg-gray-100 text-gray-700 group-hover:bg-purple-100 group-hover:text-purple-700"
+                                                }`}
                                             >
                                                 {answer.option_letter}
                                             </div>
 
                                             <span
-                                                className={`
-flex-1 text-sm sm:text-base
-leading-relaxed font-medium
-${
-    isSelected
-        ? "text-purple-950"
-        : "text-gray-800"
-}
-`}
+                                                className={`flex-1 text-sm sm:text-base leading-relaxed font-medium
+                                                ${isSelected 
+                                                    ? "text-purple-950" 
+                                                    : "text-gray-800"
+                                                }`}
                                             >
                                                 {answer.answer}
                                             </span>
 
                                             <div
-                                                className={`
-w-6 h-6 shrink-0 rounded-full
-border-2 flex items-center justify-center
-transition-all
-${
-    isSelected
-        ? "border-purple-600 bg-purple-600"
-        : "border-gray-300"
-}
-`}
+                                                className={`w-6 h-6 shrink-0 rounded-full border-2 flex items-center justify-center 
+                                                transition-all ${isSelected 
+                                                    ? "border-purple-600 bg-purple-600" 
+                                                    : "border-gray-300"
+                                                }`}
                                             >
                                                 {isSelected && (
                                                     <div className="w-2 h-2 rounded-full bg-white" />

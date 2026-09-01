@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
+import { BookOpen, Trophy } from "lucide-react";
 
 export default function BibleLeaderboard() {
+    const [quizzes, setQuizzes] = useState([]);
     const [quiz, setQuiz] = useState(null);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,15 +13,70 @@ export default function BibleLeaderboard() {
     // LOAD PUBLIC LEADERBOARD
     // =========================================================
 
+    async function loadQuizResults(quizId) {
+        try {
+            setError("");
+
+            const {
+                data: resultData,
+                error: resultError,
+            } = await supabase
+                .from("bible_quiz_leaderboard")
+                .select(`
+                id,
+                quiz_id,
+                display_name,
+                branch_name,
+                score,
+                total_questions,
+                percentage,
+                completed_at
+            `)
+                .eq("quiz_id", quizId)
+                .order("percentage", {
+                    ascending: false,
+                })
+                .order("score", {
+                    ascending: false,
+                })
+                .order("completed_at", {
+                    ascending: true,
+                });
+
+            if (resultError) {
+                throw resultError;
+            }
+
+            setResults(resultData || []);
+
+        } catch (err) {
+            console.error(
+                "❌ Quiz results loading error:",
+                err
+            );
+
+            setError(
+                err?.message ||
+                "Unable to load quiz results."
+            );
+        }
+    }
+
     useEffect(() => {
-        async function loadLeaderboard() {
+        async function loadQuizzes() {
             try {
                 setLoading(true);
                 setError("");
 
                 // -------------------------------------------------
-                // GET ACTIVE QUIZ
+                // GET QUIZZES FROM THE LAST 6 MONTHS
                 // -------------------------------------------------
+
+                const sixMonthsAgo = new Date();
+
+                sixMonthsAgo.setMonth(
+                    sixMonthsAgo.getMonth() - 6
+                );
 
                 const {
                     data: quizData,
@@ -27,57 +84,62 @@ export default function BibleLeaderboard() {
                 } = await supabase
                     .from("bible_quizzes")
                     .select(`
-                        id,
-                        title,
-                        description,
-                        week_number,
-                        year
-                    `)
-                    .eq("is_active", true)
-                    .order("created_at", {
+                    id,
+                    title,
+                    description,
+                    week_number,
+                    year,
+                    start_date,
+                    end_date,
+                    is_active,
+                    created_at
+                `)
+                    .gte(
+                        "end_date",
+                        sixMonthsAgo.toISOString().split("T")[0]
+                    )
+                    .order("start_date", {
                         ascending: false,
-                    })
-                    .limit(1)
-                    .maybeSingle();
+                    });
 
                 if (quizError) {
                     throw quizError;
                 }
 
-                if (!quizData) {
-                    setQuiz(null);
+                const availableQuizzes = quizData || [];
+
+                setQuizzes(availableQuizzes);
+
+                // -------------------------------------------------
+                // SELECT CURRENT QUIZ FIRST
+                // -------------------------------------------------
+
+                const today = new Date()
+                    .toISOString()
+                    .split("T")[0];
+
+                const currentQuiz =
+                    availableQuizzes.find(
+                        (item) =>
+                            item.is_active &&
+                            item.start_date <= today &&
+                            item.end_date >= today
+                    ) ||
+                    availableQuizzes[0] ||
+                    null;
+
+                setQuiz(currentQuiz);
+
+                if (!currentQuiz) {
                     setResults([]);
                     return;
                 }
 
-                setQuiz(quizData);
-
                 // -------------------------------------------------
-                // GET RESULTS
+                // LOAD RESULTS FOR SELECTED QUIZ
                 // -------------------------------------------------
 
-                const {
-                    data: resultData,
-                    error: resultError,
-                } = await supabase
-                    .from("bible_quiz_leaderboard")
-                    .select(`id, quiz_id, display_name, branch_name, score, total_questions, percentage, completed_at `)
-                    .eq("quiz_id", quizData.id)
-                    .order("percentage", {
-                        ascending: false,
-                    })
-                    .order("score", {
-                        ascending: false,
-                    })
-                    .order("completed_at", {
-                        ascending: true,
-                    });
-
-                if (resultError) {
-                    throw resultError;
-                }
-
-                setResults(resultData || []);
+                await loadQuizResults(currentQuiz.id);
 
             } catch (err) {
                 console.error(
@@ -94,7 +156,7 @@ export default function BibleLeaderboard() {
             }
         }
 
-        loadLeaderboard();
+        loadQuizzes();
     }, []);
 
     // =========================================================
@@ -186,7 +248,7 @@ export default function BibleLeaderboard() {
                 <div className="max-w-2xl mx-auto text-center">
 
                     <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-purple-50 flex items-center justify-center text-2xl">
-                        📖
+                        <BookOpen className="w-10 h-10 mb-5 text-white"/>
                     </div>
 
                     <h2 className="text-2xl font-bold text-gray-900">
@@ -226,7 +288,7 @@ export default function BibleLeaderboard() {
                 <div className="relative max-w-5xl mx-auto px-5 sm:px-8 lg:px-10 py-14 sm:py-20 text-center">
 
                     <div className="w-14 h-14 mx-auto mb-6 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-2xl backdrop-blur-sm">
-                        🏆
+                        <Trophy className="w-4 h-4" />
                     </div>
 
                     <p className="text-xs uppercase tracking-[0.3em] text-purple-200 font-semibold mb-4">
@@ -244,6 +306,69 @@ export default function BibleLeaderboard() {
                 </div>
 
             </header>
+
+            {quizzes.length > 0 && (
+                <div className="mb-8">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-purple-600">
+                                    Quiz History
+                                </p>
+
+                                <h2 className="text-lg sm:text-xl font-bold text-gray-950 mt-1">
+                                    Select a Quiz
+                                </h2>
+                            </div>
+
+                            <select
+                                value={quiz?.id || ""}
+                                onChange={async (e) => {
+                                    const selectedQuiz =
+                                        quizzes.find(
+                                            (item) =>
+                                                item.id === e.target.value
+                                        );
+
+                                    if (!selectedQuiz) {
+                                        return;
+                                    }
+
+                                    setQuiz(selectedQuiz);
+
+                                    await loadQuizResults(
+                                        selectedQuiz.id
+                                    );
+                                }}
+                                className="
+                        w-full sm:w-auto sm:min-w-[280px]
+                        border border-gray-200
+                        rounded-xl
+                        px-4 py-3
+                        bg-white
+                        text-sm font-semibold text-gray-800
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-purple-500
+                    "
+                            >
+                                {quizzes.map((item) => (
+                                    <option
+                                        key={item.id}
+                                        value={item.id}
+                                    >
+                                        {item.title}
+                                    </option>
+                                ))}
+                            </select>
+
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
             {/* =================================================
                 CONTENT
@@ -321,7 +446,7 @@ export default function BibleLeaderboard() {
                     <div className="px-5 sm:px-8 py-6 border-b border-gray-100">
 
                         <p className="text-xs uppercase tracking-[0.25em] font-semibold text-purple-600">
-                            Weekly Rankings
+                            Quiz Rankings
                         </p>
 
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-950 mt-1">
@@ -337,7 +462,7 @@ export default function BibleLeaderboard() {
                         <div className="px-6 py-16 text-center">
 
                             <div className="text-4xl mb-4">
-                                🏆
+                                <Trophy className="w-4 h-4" />
                             </div>
 
                             <h3 className="text-lg font-bold text-gray-900">

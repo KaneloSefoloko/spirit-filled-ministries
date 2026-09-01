@@ -1,22 +1,21 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-const emptyForm = {
+const createEmptyForm = () => ({
     title: "",
     description: "",
     week_number: "",
     year: new Date().getFullYear(),
     start_date: "",
     end_date: "",
-    is_active: false,
-};
+});
 
 export default function QuizForm({
-                                     editingQuiz,
-                                     setEditingQuiz,
-                                     refreshQuizzes,
-                                 }) {
-    const [form, setForm] = useState(emptyForm);
+    editingQuiz,
+    setEditingQuiz,
+    refreshQuizzes,
+}) {
+    const [form, setForm] = useState(createEmptyForm());
     const [saving, setSaving] = useState(false);
 
     /* ======================================================
@@ -25,7 +24,7 @@ export default function QuizForm({
 
     useEffect(() => {
         if (!editingQuiz) {
-            setForm(emptyForm);
+            setForm(createEmptyForm());
             return;
         }
 
@@ -36,7 +35,6 @@ export default function QuizForm({
             year: editingQuiz.year ?? new Date().getFullYear(),
             start_date: editingQuiz.start_date || "",
             end_date: editingQuiz.end_date || "",
-            is_active: editingQuiz.is_active ?? false,
         });
     }, [editingQuiz]);
 
@@ -45,11 +43,11 @@ export default function QuizForm({
     ====================================================== */
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value } = e.target;
 
         setForm((previous) => ({
             ...previous,
-            [name]: type === "checkbox" ? checked : value,
+            [name]: value,
         }));
     };
 
@@ -58,7 +56,7 @@ export default function QuizForm({
     ====================================================== */
 
     const resetForm = () => {
-        setForm(emptyForm);
+        setForm(createEmptyForm());
         setEditingQuiz(null);
     };
 
@@ -103,7 +101,18 @@ export default function QuizForm({
                     : new Date().getFullYear(),
                 start_date: form.start_date,
                 end_date: form.end_date,
-                is_active: form.is_active,
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * QuizForm does NOT control publishing or activation.
+                 *
+                 * Publishing / activation is handled separately from
+                 * QuizCard / BibleQuizManager.
+                 *
+                 * Therefore editing a quiz will not accidentally change
+                 * its current published/active state.
+                 */
             };
 
             /* ==================================================
@@ -130,7 +139,13 @@ export default function QuizForm({
             else {
                 const { error } = await supabase
                     .from("bible_quizzes")
-                    .insert(quizData);
+                    .insert({
+                        ...quizData,
+
+                        // New quizzes always begin as drafts.
+                        published_at: null,
+                        is_active: false,
+                    });
 
                 if (error) {
                     throw error;
@@ -142,6 +157,7 @@ export default function QuizForm({
             resetForm();
 
             await refreshQuizzes();
+
         } catch (error) {
             console.error("Quiz save error:", error);
 
@@ -149,6 +165,7 @@ export default function QuizForm({
                 error?.message ||
                 "Something went wrong while saving the quiz."
             );
+
         } finally {
             setSaving(false);
         }
@@ -161,7 +178,9 @@ export default function QuizForm({
     return (
         <section className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8">
 
-            {/* HEADER */}
+            {/* ==================================================
+                HEADER
+            ================================================== */}
 
             <div className="mb-8">
 
@@ -185,14 +204,18 @@ export default function QuizForm({
 
             </div>
 
-            {/* FORM */}
+            {/* ==================================================
+                FORM
+            ================================================== */}
 
             <form
                 onSubmit={handleSubmit}
                 className="space-y-6"
             >
 
-                {/* TITLE */}
+                {/* ==================================================
+                    TITLE
+                ================================================== */}
 
                 <div>
 
@@ -211,7 +234,9 @@ export default function QuizForm({
 
                 </div>
 
-                {/* DESCRIPTION */}
+                {/* ==================================================
+                    DESCRIPTION
+                ================================================== */}
 
                 <div>
 
@@ -230,7 +255,9 @@ export default function QuizForm({
 
                 </div>
 
-                {/* WEEK / YEAR */}
+                {/* ==================================================
+                    WEEK / YEAR
+                ================================================== */}
 
                 <div className="grid sm:grid-cols-2 gap-5">
 
@@ -273,7 +300,9 @@ export default function QuizForm({
 
                 </div>
 
-                {/* DATES */}
+                {/* ==================================================
+                    DATES
+                ================================================== */}
 
                 <div className="grid sm:grid-cols-2 gap-5">
 
@@ -311,38 +340,40 @@ export default function QuizForm({
 
                 </div>
 
-                {/* ACTIVE */}
+                {/* ==================================================
+                    STATUS INFORMATION
+                ================================================== */}
 
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
 
-                    <label className="flex items-start gap-4 cursor-pointer">
+                    <div className="flex items-start gap-3">
 
-                        <input
-                            type="checkbox"
-                            name="is_active"
-                            checked={form.is_active}
-                            onChange={handleChange}
-                            className="mt-1 w-5 h-5 accent-purple-600"
-                        />
+                        <div className="text-xl">
+                            ℹ️
+                        </div>
 
                         <div>
 
-                            <p className="font-semibold text-gray-900">
-                                Make this quiz active
+                            <p className="font-semibold text-blue-900">
+                                Quiz publishing is managed separately
                             </p>
 
-                            <p className="text-sm text-gray-500 mt-1">
-                                Active quizzes can be used as the current
-                                Bible challenge on the website.
+                            <p className="text-sm text-blue-700 mt-1 leading-relaxed">
+                                Saving this form will not publish or activate
+                                the quiz. After creating your questions, use
+                                the Publish, Activate, or Deactivate controls
+                                on the quiz card.
                             </p>
 
                         </div>
 
-                    </label>
+                    </div>
 
                 </div>
 
-                {/* ACTIONS */}
+                {/* ==================================================
+                    ACTIONS
+                ================================================== */}
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
 
