@@ -91,6 +91,9 @@ export default function BibleQuiz() {
                 // Correct answers must never be exposed to the
                 // public browser.
                 // -------------------------------------------------
+                // -------------------------------------------------
+// QUESTIONS
+// -------------------------------------------------
 
                 const {
                     data: questionData,
@@ -98,22 +101,16 @@ export default function BibleQuiz() {
                 } = await supabase
                     .from("bible_quiz_questions")
                     .select(`
-id,
-    quiz_id,
-    question,
-    explanation,
-    order_number,
-    bible_reference,
-    difficulty,
-    points,
-    image_url,
-    bible_quiz_answers (
         id,
-        answer,
-        option_letter,
-        display_order
-    )
-        `)
+        quiz_id,
+        question,
+        explanation,
+        order_number,
+        bible_reference,
+        difficulty,
+        points,
+        image_url
+    `)
                     .eq("quiz_id", quizData.id)
                     .order("order_number", {
                         ascending: true,
@@ -124,16 +121,62 @@ id,
                     throw questionError;
                 }
 
+// -------------------------------------------------
+// PUBLIC ANSWERS
+//
+// IMPORTANT:
+// These come from the safe public view.
+// is_correct is NOT exposed.
+// -------------------------------------------------
+
+                const questionIds = (questionData || []).map(
+                    (question) => question.id
+                );
+
+                let answerData = [];
+
+                if (questionIds.length > 0) {
+                    const {
+                        data,
+                        error: answerError,
+                    } = await supabase
+                        .from("bible_quiz_public_answers")
+                        .select(`
+            id,
+            question_id,
+            answer,
+            option_letter,
+            display_order
+        `)
+                        .in("question_id", questionIds)
+                        .order("display_order", {
+                            ascending: true,
+                        });
+
+                    if (answerError) {
+                        throw answerError;
+                    }
+
+                    answerData = data || [];
+                }
+
+// -------------------------------------------------
+// ATTACH ANSWERS TO QUESTIONS
+// -------------------------------------------------
+
                 const formattedQuestions = (questionData || []).map(
                     (question) => ({
                         ...question,
-                        bible_quiz_answers: [
-                            ...(question.bible_quiz_answers || []),
-                        ].sort(
-                            (a, b) =>
-                                (a.display_order ?? 0) -
-                                (b.display_order ?? 0)
-                        ),
+                        bible_quiz_answers: answerData
+                            .filter(
+                                (answer) =>
+                                    answer.question_id === question.id
+                            )
+                            .sort(
+                                (a, b) =>
+                                    (a.display_order ?? 0) -
+                                    (b.display_order ?? 0)
+                            ),
                     })
                 );
 
