@@ -43,9 +43,22 @@ export default function Home() {
     const [activities, setActivities] = useState([]);
     const [dailyMessage, setDailyMessage] = useState(null);
     const [posts, setPosts] = useState([]);
+    const [activeQuiz, setActiveQuiz] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState(Date.now());
+    const quizDeadline = activeQuiz?.end_at
+        ? new Date(activeQuiz.end_at).getTime()
+        : null;
+
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    const quizReminderVisible =
+        activeQuiz &&
+        quizDeadline &&
+        quizDeadline > now &&
+        quizDeadline - now <= twentyFourHours;
+
     const [visibleItems, setVisibleItems] = useState(false);
     const [showNoLiveModal, setShowNoLiveModal] = useState(false);
 
@@ -54,6 +67,25 @@ export default function Home() {
 
     const isLive = streamStatus === "live" && hasStream;
     const isReplay = streamStatus === "ended" && hasStream;
+
+    const formatQuizCountdown = (deadline) => {
+        const diff = deadline - now;
+
+        if (diff <= 0) return "Quiz Closed";
+
+        const totalSeconds = Math.floor(diff / 1000);
+
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (days > 0) {
+            return `${days}d ${hours}h ${minutes}m`;
+        }
+
+        return `${hours}h ${minutes}m ${seconds}s`;
+    };
 
     const formatDate = (date) =>
         new Date(date).toLocaleDateString([], {
@@ -85,6 +117,16 @@ export default function Home() {
     /* ========================
        TIME + SLIDE
     ======================== */
+    useEffect(() => {
+        if (!activeQuiz?.end_at) return;
+
+        const deadline = new Date(activeQuiz.end_at).getTime();
+
+        if (now >= deadline) {
+            setActiveQuiz(null);
+        }
+    }, [now, activeQuiz]);
+
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);
@@ -133,6 +175,7 @@ export default function Home() {
                 setActivities(cached.activities);
                 setDailyMessage(cached.message);
                 setPosts(cached.posts || []);
+                setActiveQuiz(cached.quiz || null);
                 setLoading(false);
             }
 
@@ -141,11 +184,20 @@ export default function Home() {
                 {data: a},
                 {data: m},
                 {data: p},
+                {data: quiz},
             ] = await Promise.all([
                 supabase.from("branches").select("*").eq("id", branch).single(),
                 supabase.from("activities").select("*").eq("branch_id", branch).order("event_date", {ascending: true}),
                 supabase.from("daily_messages").select("message").order("created_at", {ascending: false}).limit(1).maybeSingle(),
                 supabase.from("posts").select("*").eq("published", true).order("created_at", {ascending: false}).limit(3),
+                supabase
+                    .from("bible_quizzes")
+                    .select("*")
+                    .eq("is_active", true)
+                    .gt("end_at", new Date().toISOString())
+                    .order("end_at", {ascending: true})
+                    .limit(1)
+                    .maybeSingle(),
             ]);
 
             if (ignore) return;
@@ -154,12 +206,14 @@ export default function Home() {
             setActivities(a || []);
             setDailyMessage(m?.message || null);
             setPosts(p || []);
+            setActiveQuiz(quiz || null);
 
             setCache(cacheKey, {
                 branch: b,
                 activities: a || [],
                 message: m?.message || null,
                 posts: p || [],
+                quiz: quiz || null,
             });
 
             setLoading(false);
@@ -711,6 +765,142 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
+
+                {/* ================= BIBLE QUIZ DEADLINE REMINDER ================= */}
+                {quizReminderVisible && (
+                    <div className="px-4 sm:px-6 md:px-10 mb-6">
+                        <div
+                            className="max-w-7xl mx-auto relative overflow-hidden rounded-[2rem]
+            bg-gradient-to-r from-purple-900 via-purple-800 to-sky-700
+            text-white shadow-[0_20px_60px_rgba(0,0,0,0.20)]"
+                        >
+
+                            {/* Decorative glow */}
+                            <div
+                                className="absolute -top-24 -right-24
+                w-72 h-72 rounded-full
+                bg-white/10 blur-3xl"
+                            />
+
+                            <div
+                                className="absolute -bottom-24 -left-24
+                w-72 h-72 rounded-full
+                bg-sky-300/10 blur-3xl"
+                            />
+
+                            <div className="relative z-10 p-6 sm:p-8 md:p-10">
+
+                                <div className="flex flex-col lg:flex-row
+                    lg:items-center lg:justify-between gap-8">
+
+                                    {/* LEFT */}
+                                    <div className="flex items-start gap-4">
+
+                                        <div
+                                            className="shrink-0 w-12 h-12
+                            rounded-2xl bg-white/10
+                            border border-white/20
+                            flex items-center justify-center"
+                                        >
+                                            <Trophy className="w-6 h-6 text-white" />
+                                        </div>
+
+                                        <div>
+
+                                            <div className="flex flex-wrap items-center gap-3 mb-2">
+
+                                <span
+                                    className="inline-flex items-center
+                                    px-3 py-1 rounded-full
+                                    bg-white/10 border border-white/20
+                                    text-[10px] sm:text-xs
+                                    uppercase tracking-[0.25em]"
+                                >
+                                    Weekly Bible Quiz
+                                </span>
+
+                                                <span
+                                                    className="inline-flex items-center
+                                    px-3 py-1 rounded-full
+                                    bg-red-500/20
+                                    border border-red-400/30
+                                    text-red-100 text-[10px] sm:text-xs
+                                    font-semibold animate-pulse"
+                                                >
+                                    Closing Soon
+                                </span>
+
+                                            </div>
+
+                                            <h3 className="text-xl sm:text-2xl font-bold">
+                                                {activeQuiz.title}
+                                            </h3>
+
+                                            <p className="text-white/70 text-sm mt-1">
+                                                The quiz closes in less than 24 hours.
+                                                Don't miss your chance to take the challenge.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    {/* RIGHT */}
+                                    <div className="flex flex-col sm:flex-row
+                        items-stretch sm:items-center gap-4">
+
+                                        {/* COUNTDOWN */}
+                                        <div
+                                            className="rounded-2xl
+                            bg-black/20
+                            border border-white/10
+                            px-5 py-3
+                            text-center
+                            min-w-[150px]"
+                                        >
+
+                                            <div
+                                                className="text-[10px]
+                                uppercase tracking-[0.3em]
+                                text-white/50 mb-1"
+                                            >
+                                                Closes In
+                                            </div>
+
+                                            <div
+                                                className="text-xl sm:text-2xl
+                                font-bold tabular-nums"
+                                            >
+                                                {formatQuizCountdown(quizDeadline)}
+                                            </div>
+
+                                        </div>
+
+                                        {/* CTA */}
+                                        <button
+                                            onClick={() => navigate("/bible-quiz")}
+                                            className="inline-flex items-center
+                            justify-center gap-3
+                            rounded-full
+                            bg-white text-purple-700
+                            px-6 py-3.5
+                            font-semibold
+                            hover:bg-gray-100
+                            hover:gap-4
+                            transition-all duration-300"
+                                        >
+                                            Take The Quiz
+                                            <ArrowRight className="w-4 h-4" />
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ================= BIBLE QUIZ ================= */}
                 <div className="py-20 sm:py-24 px-4 sm:px-6 md:px-10">
