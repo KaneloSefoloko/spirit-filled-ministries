@@ -16,7 +16,6 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import Privacy from "./pages/Privacy.jsx";
 import Terms from "./pages/Terms.jsx";
-import NewMemberModal from "./components/NewMemberModal";
 import PostDetail from "./pages/PostDetail";
 import Events from "./pages/Events.jsx";
 import EventDetails from "./pages/EventDetails.jsx";
@@ -28,6 +27,7 @@ import Videos from "./pages/Videos.jsx";
 import Contact from "./pages/Contact.jsx";
 import BibleQuiz from "./pages/BibleQuiz";
 import BibleLeaderboard from "./pages/BibleLeaderboard.jsx";
+import EventMarketingModal from "./components/EventMarketingModal.jsx";
 
 export default function App() {
     return (
@@ -37,7 +37,7 @@ export default function App() {
                     <ScrollToTop />
 
                     {/* ✅ SHOWS ON NEW SESSION ONLY */}
-                    <NewMemberModal />
+                    <EventMarketingModal />
 
                     <Navbar />
 
